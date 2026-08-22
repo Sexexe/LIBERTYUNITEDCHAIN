@@ -1,0 +1,1 @@
+   worker: python luc_bot.py
