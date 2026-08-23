@@ -7,7 +7,6 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, FSInputFil
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
-# ===== НАСТРОЙКИ =====
 BOT_TOKEN = "8846227664:AAHbyx0JG1JwsWjMDDBleLaKpryptXwhOr4"
 MIN_WITHDRAW = 1.0  # Минимум авто-вывода TON
 COMMISSION = 0.15   # 15% платформы
