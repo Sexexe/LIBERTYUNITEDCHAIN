@@ -1,3 +1,5 @@
+from keep_alive import keep_alive
+keep_alive()
 import asyncio
 import sqlite3
 from datetime import datetime
