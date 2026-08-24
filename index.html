@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIBERTY UNITED CHAIN</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a1628; /* Темно-синий как на логотипе */
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container { max-width: 600px; margin: 0 auto; }
+        
+        /* Логотип */
+        .logo-section { text-align: center; margin-bottom: 30px; }
+        .logo { 
+            width: 220px; 
+            height: auto; 
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+        
+        /* Навигация */
+        .nav { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 30px; 
+        }
+        .nav-btn {
+            flex: 1; 
+            padding: 14px 20px; 
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .nav-btn.active { 
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,255,255,0.3);
+        }
+        
+        /* Вкладки */
+        .tab { display: none; }
+        .tab.active { display: block; }
+        
+        h2 { 
+            font-size: 20px; 
+            font-weight: 700; 
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Карточки */
+        .card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .card-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 12px; 
+        }
+        .gpu-name { 
+            font-size: 18px; 
+            font-weight: 700; 
+            color: #ffffff; 
+        }
+        .gpu-price { 
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px; 
+            border-radius: 20px; 
+            font-size: 14px; 
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .card-info { 
+            font-size: 14px; 
+            color: rgba(255,255,255,0.7);
+            margin: 8px 0; 
+        }
+        
+        .btn-rent {
+            width: 100%; 
+            padding: 14px; 
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: all 0.2s;
+        }
+        .btn-rent:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,255,255,0.3);
+        }
+        
+        .tagline {
+            text-align: center;
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-section">
+            <img src="luc.png" alt="LIBERTY UNITED CHAIN" class="logo">
+            <div class="tagline">IN GOD WE TRUST</div>
+        </div>
+
+        <nav class="nav">
+            <button class="nav-btn active" onclick="showTab('gpu', this)">🖥 GPU Аренда</button>
+            <button class="nav-btn" onclick="showTab('compare', this)">📊 Сравнение</button>
+        </nav>
+
+        <div id="gpu" class="tab active">
+            <h2>🔥 Лучшие предложения</h2>
+            <div id="gpu-list"></div>
+        </div>
+
+        <div id="compare" class="tab">
+            <h2>📊 Платформы</h2>
+            <div id="compare-list"></div>
+        </div>
+    </div>
+
+    <script>
+        const offers = [
+            { platform: 'Vast.ai', gpu: 'RTX 4090', vram: '24GB', price: '$0.25/час', link: 'https://vast.ai' },
+            { platform: 'RunPod', gpu: 'RTX 3090', vram: '24GB', price: '$0.20/час', link: 'https://runpod.io' },
+            { platform: 'Lambda', gpu: 'A100', vram: '40GB', price: '$1.10/час', link: 'https://lambdalabs.com' }
+        ];
+
+        const platforms = [
+            { name: 'Vast.ai', price: 'от $0.15/час', rating: '4.5⭐' },
+            { name: 'RunPod', price: 'от $0.20/час', rating: '4.7⭐' },
+            { name: 'Lambda Labs', price: 'от $0.50/час', rating: '4.8⭐' }
+        ];
+
+        function showTab(id, btn) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function renderGPU() {
+            document.getElementById('gpu-list').innerHTML = offers.map(o => `
+                <div class="card">
+                    <div class="card-header">
+                        <div class="gpu-name">${o.gpu}</div>
+                        <div class="gpu-price">${o.price}</div>
+                    </div>
+                    <div class="card-info">🏢 ${o.platform}</div>
+                    <div class="card-info">💾 ${o.vram}</div>
+                    <button class="btn-rent" onclick="window.open('${o.link}', '_blank')">Арендовать</button>
+                </div>
+            `).join('');
+        }
+
+        function renderCompare() {
+            document.getElementById('compare-list').innerHTML = platforms.map(p => `
+                <div class="card">
+                    <div class="card-header">
+                        <div class="gpu-name">${p.name}</div>
+                        <div class="gpu-price">${p.rating}</div>
+                    </div>
+                    <div class="card-info">💵 ${p.price}</div>
+                </div>
+            `).join('');
+        }
+
+        window.onload = () => {
+            renderGPU();
+            renderCompare();
+        };
+    </script>
+</body>
+</html>
