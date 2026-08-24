@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIBERTY UNITED CHAIN</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Логотип -->
+        <div class="logo-section">
+            <img src="luc.png" alt="LIBERTY UNITED CHAIN" class="logo">
+        </div>
+
+        <!-- Навигация -->
+        <nav class="nav">
+            <button class="nav-btn active" onclick="showTab('gpu')">🖥 GPU Аренда</button>
+            <button class="nav-btn" onclick="showTab('compare')">📊 Сравнение цен</button>
+            <button class="nav-btn" onclick="showTab('wallet')">💰 Кошелек</button>
+        </nav>
+
+        <!-- Вкладка: GPU Аренда -->
+        <div id="gpu" class="tab active">
+            <h2>🔥 Лучшие предложения GPU</h2>
+            <div id="gpu-list" class="cards">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+
+        <!-- Вкладка: Сравнение -->
+        <div id="compare" class="tab">
+            <h2> Сравнение платформ</h2>
+            <div id="compare-list" class="cards">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+
+        <!-- Вкладка: Кошелек -->
+        <div id="wallet" class="tab">
+            <h2>💰 Ваш баланс</h2>
+            <div class="balance-card">
+                <div class="balance-amount">0 TON</div>
+                <div class="balance-usd">≈ $0.00</div>
+            </div>
+            <button class="btn-primary" onclick="connectWallet()"> Подключить кошелек</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
