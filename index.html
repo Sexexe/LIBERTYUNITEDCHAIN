@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Lunar Odyssey</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{width:100%;height:100%;overflow:hidden;position:fixed;top:0;left:0;background:#000;font-family:-apple-system,system-ui,sans-serif;color:#cfe8ff;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+  #hud{position:fixed;top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));z-index:10;background:rgba(0,0,0,.8);padding:12px 16px;border-radius:10px;border:1px solid rgba(157,216,255,.3);font-size:12px;line-height:1.7;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);max-width:240px}
+  #hud b{color:#9fd8ff;letter-spacing:1.5px;font-size:13px}
+  #turbo{position:fixed;bottom:max(20px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));z-index:20;background:linear-gradient(135deg,#ff6b35,#f7931e);color:#fff;border:none;padding:16px 28px;border-radius:50px;font-size:15px;font-weight:bold;letter-spacing:2px;cursor:pointer;box-shadow:0 4px 20px rgba(255,107,53,.5);transition:all .2s;touch-action:manipulation;min-width:120px}
+  #turbo:active{transform:scale(.95);background:linear-gradient(135deg,#ff3535,#ff6b35)}
+  #turbo.active{background:linear-gradient(135deg,#ff3535,#ff6b35);box-shadow:0 4px 30px rgba(255,53,53,.8)}
+  #music{position:fixed;bottom:max(80px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));z-index:20;background:rgba(0,0,0,.8);color:#9fd8ff;border:1px solid rgba(157,216,255,.3);padding:12px 20px;border-radius:50px;font-size:13px;cursor:pointer;touch-action:manipulation;-webkit-appearance:none;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:all .2s}
+  #music.playing{background:rgba(157,216,255,.2)}
+  #crosshair{position:fixed;top:50%;left:50%;width:4px;height:4px;background:rgba(255,255,255,.6);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:5;box-shadow:0 0 6px rgba(157,216,255,.5)}
+  #overlay{position:fixed;inset:0;background:radial-gradient(circle,#111 0%,#000 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;cursor:pointer;transition:opacity 1s}
+  #overlay h2{font-size:36px;letter-spacing:6px;margin:0;color:#cfe8ff}
+  #overlay p{color:#888;margin-top:16px;letter-spacing:2px;text-align:center;padding:0 20px}
+  #overlay.hidden{opacity:0;pointer-events:none}
+  @media (max-width:768px){
+    #hud{font-size:11px;padding:10px 12px;max-width:200px}
+    #hud b{font-size:12px}
+    #turbo, #music{padding:14px 24px;font-size:14px}
+    #overlay h2{font-size:28px}
+  }
+</style>
+</head>
+<body>
+<div id="overlay">
+  <h2>LUNAR ODYSSEY</h2>
+  <p>НАЖМИТЕ, ЧТОБЫ НАЧАТЬ</p>
+  <p style="font-size:11px;margin-top:30px;opacity:.7">СВАЙП — обзор · ПКМ/ДВОЙНОЙ ТАП — ход/стоп<br>TURBO — ускорение ×10 · 🎵 Mission Control</p>
+</div>
+<div id="hud">
+  <b>◆ LUNAR ODYSSEY</b><br>
+  Солнце: <span id="sun">—</span><br>
+  Режим: <span id="mode">стоп</span><br>
+  <span id="speedInfo">Скорость: обычная</span>
+</div>
+<div id="crosshair"></div>
+<button id="music">🔇 Mission Control</button>
+<button id="turbo">TURBO</button>
+
+<audio id="radio" loop crossorigin="anonymous">
+  <source src="https://ice1.somafm.com/missioncontrol-128-mp3" type="audio/mpeg">
+</audio>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const tg = window.Telegram?.WebApp;
+if(tg){tg.ready();tg.expand();tg.disableVerticalSwipes();if(tg.setHeaderColor)tg.setHeaderColor('#000');if(tg.setBackgroundColor)tg.setBackgroundColor('#000')}
+
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+const WORLD_SIZE = 14230;
+const WORLD_HALF = WORLD_SIZE / 2;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+
+const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 60000);
+camera.position.set(0, 2, 0);
+
+const renderer = new THREE.WebGLRenderer({antialias: !isMobile, powerPreference: 'high-performance', alpha: false});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, isMobile ? 2 : 2));
+renderer.shadowMap.enabled = !isMobile;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('gesturechange', e => e.preventDefault());
+document.addEventListener('gestureend', e => e.preventDefault());
+
+// ====== МУЗЫКА ======
+const radio = document.getElementById('radio');
+const musicBtn = document.getElementById('music');
+let musicPlaying = false;
+
+musicBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (musicPlaying) {
+    radio.pause();
+    musicBtn.classList.remove('playing');
+    musicBtn.innerHTML = '🔇 Mission Control';
+    musicPlaying = false;
+  } else {
+    const playPromise = radio.play();
+    if(playPromise !== undefined) {
+      playPromise.then(() => { musicBtn.classList.add('playing'); musicBtn.innerHTML = '🎵 Mission Control'; musicPlaying = true; })
+      .catch(() => { setTimeout(() => { radio.play().then(() => { musicBtn.classList.add('playing'); musicBtn.innerHTML = '🎵 Mission Control'; musicPlaying = true; }).catch(() => {}); }, 100); });
+    }
+  }
+  if(tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+});
+
+// ====== КРАТЕРЫ ======
+const DEPTH_MULTS = [8, 16, 24, 40, 80];
+const craterCount = isMobile
+  ? {large:30, medium:120, small:400, tiny:900, micro:1600, basin:6}
+  : {large:60, medium:240, small:900, tiny:2200, micro:4000, basin:14};
+const craters = [];
+
+function pushCrater(r, baseDepth) {
+  const mult = DEPTH_MULTS[Math.floor(Math.random() * DEPTH_MULTS.length)];
+  craters.push({x:(Math.random()-.5)*WORLD_SIZE, z:(Math.random()-.5)*WORLD_SIZE, r, d:baseDepth*mult, mult});
+}
+for(let i=0; i<craterCount.large;  i++) pushCrater(140 + Math.random()*260, .30);
+for(let i=0; i<craterCount.medium; i++) pushCrater( 70 + Math.random()*120, .28);
+for(let i=0; i<craterCount.small;  i++) pushCrater( 30 + Math.random()*60,  .24);
+for(let i=0; i<craterCount.tiny;   i++) pushCrater(  8 + Math.random()*25,  .20);
+for(let i=0; i<craterCount.micro;  i++) pushCrater(  1 + Math.random()*10,  .16);
+for(let i=0; i<craterCount.basin;  i++) craters.push({x:(Math.random()-.5)*WORLD_SIZE, z:(Math.random()-.5)*WORLD_SIZE, r:400+Math.random()*500, d:120+Math.random()*200, mult:80, basin:true});
+
+function smoothstep(edge0, edge1, x) {
+  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
+function softNoise(x, z) {
+  return Math.sin(x*.0018)*Math.cos(z*.0018)*22 + Math.sin(x*.0045+1.3)*Math.cos(z*.0037+2.1)*10 +
+         Math.sin(x*.011+0.7)*Math.cos(z*.009+1.5)*4 + Math.sin(x*.03+2.4)*Math.cos(z*.028+0.9)*1.2;
+}
+function groundH(x, z) {
+  let h = softNoise(x, z);
+  for(const c of craters) {
+    const dx = x-c.x, dz = z-c.z, d = Math.sqrt(dx*dx+dz*dz), t = d/c.r;
+    if(t >= 1.5) continue;
+    const bowlFalloff = 1 - smoothstep(0, 1.15, t);
+    h -= c.d * bowlFalloff * bowlFalloff;
+    if(c.r > 90 && !c.basin) { const p = 1 - smoothstep(0, 0.28, t); h += c.d * 0.32 * p * p; }
+    if(t > 0.82 && t < 1.5) { const rf = smoothstep(0.82, 1.05, t) * (1 - smoothstep(1.05, 1.5, t)); h += c.d * 0.30 * rf; }
+    if(c.r > 100 && !c.basin) { const tz = smoothstep(0.35, 0.45, t) * (1 - smoothstep(0.65, 0.75, t)); h += c.d * 0.06 * tz * (Math.sin(t*9)*0.5+0.5); }
+    if(c.basin && t > 0.9) { const rf = smoothstep(0.9, 1.15, t) * (1 - smoothstep(1.15, 1.5, t)); h += c.d * 0.25 * rf; }
+  }
+  return h;
+}
+
+// ====== ТЕКСТУРА ГРУНТА ======
+function moonTex() {
+  const size = isMobile ? 1024 : 2048;
+  const c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  const ctx = c.getContext('2d');
+  const baseGrad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size*0.7);
+  baseGrad.addColorStop(0, '#9a9a9a'); baseGrad.addColorStop(0.5, '#8e8e8e'); baseGrad.addColorStop(1, '#828282');
+  ctx.fillStyle = baseGrad; ctx.fillRect(0, 0, size, size);
+  const dustCount = isMobile ? 400000 : 1200000;
+  for (let i = 0; i < dustCount; i++) { const v = 110 + Math.random()*80; ctx.fillStyle = `rgba(${v},${v},${v},${Math.random()*0.12})`; ctx.fillRect(Math.random()*size, Math.random()*size, 1, 1); }
+  const clumpCount = isMobile ? 3000 : 8000;
+  for (let i = 0; i < clumpCount; i++) {
+    const x = Math.random()*size, y = Math.random()*size, r = 2 + Math.random()*10, v = 90 + Math.random()*100;
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+    grad.addColorStop(0, `rgba(${v},${v},${v},${0.08+Math.random()*0.15})`);
+    grad.addColorStop(1, `rgba(${v},${v},${v},0)`);
+    ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+  }
+  const microCraterCount = isMobile ? 80 : 250;
+  for (let i = 0; i < microCraterCount; i++) {
+    const x = Math.random()*size, y = Math.random()*size, r = 4 + Math.random()*25;
+    const grad = ctx.createRadialGradient(x, y, r*0.1, x, y, r);
+    grad.addColorStop(0, 'rgba(50,50,50,0.35)'); grad.addColorStop(0.6, 'rgba(90,90,90,0.15)'); grad.addColorStop(1, 'rgba(130,130,130,0)');
+    ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(80, 80);
+  if (!isMobile) t.anisotropy = 16;
+  return t;
+}
+
+// ====== ЛАНДШАФТ ======
+const terrainRes = isMobile ? 300 : 700;
+const terrainGeo = new THREE.PlaneGeometry(WORLD_SIZE, WORLD_SIZE, terrainRes, terrainRes);
+terrainGeo.rotateX(-Math.PI/2);
+const v = terrainGeo.attributes.position;
+for(let i=0; i<v.count; i++) v.setY(i, groundH(v.getX(i), v.getZ(i)));
+terrainGeo.computeVertexNormals();
+const terrain = new THREE.Mesh(terrainGeo, new THREE.MeshStandardMaterial({map: moonTex(), color: 0xb0b0b0, roughness: 0.97, metalness: 0.01}));
+terrain.receiveShadow = !isMobile;
+scene.add(terrain);
+
+// ====== ЗВЁЗДЫ ======
+function createStarTexture(sizePx) {
+  const c = document.createElement('canvas'); c.width = c.height = sizePx; const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(sizePx/2, sizePx/2, 0, sizePx/2, sizePx/2, sizePx/2);
+  g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.15, 'rgba(255,255,255,0.95)');
+  g.addColorStop(0.4, 'rgba(255,255,255,0.55)'); g.addColorStop(0.7, 'rgba(255,255,255,0.18)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, sizePx, sizePx);
+  return new THREE.CanvasTexture(c);
+}
+const starTextures = []; for(let i=0; i<10; i++) starTextures.push(createStarTexture(32 + i*4));
+
+const brightStars = [[-0.76,29.1,-1.46],[1.9,34.98,2.06],[5.24,-8.2,-1.46],[5.92,7.41,0.4],[6.75,-16.72,0.34],[7.65,5.22,1.5],[5.53,-0.3,1.69],[5.6,-1.2,1.77],[7.39,31.89,1.64],[7.58,28.03,1.14],[6.38,-17.96,1.5],[6.62,-28.97,1.83],[10.14,11.97,1.35],[12.44,-63.1,0.77],[12.9,55.96,1.77],[11.06,61.75,1.79],[11.89,14.57,1.35],[14.26,19.18,-0.04],[14.6,49.31,1.79],[15.57,56.38,1.76],[16.49,26.71,2.23],[18.62,38.78,0.03],[19.85,8.87,2.99],[20.69,45.28,1.25],[22.96,-29.62,1.16],[22.14,58.75,2.06],[8.37,-59.5,1.68],[13.42,-11.16,0.98],[10.67,-58.97,0.62],[11.62,-60.37,0.61],[17.56,-37.1,1.86],[18.4,-34.29,1.63]];
+
+function raDecToXYZ(ra_h, dec_deg, radius) {
+  const ra = ra_h*15*Math.PI/180, dec = dec_deg*Math.PI/180;
+  return [radius*Math.cos(dec)*Math.cos(ra), radius*Math.sin(dec), -radius*Math.cos(dec)*Math.sin(ra)];
+}
+function makeStarLayer(stars, sizePx, opacity, texIndex, brightMult) {
+  const geo = new THREE.BufferGeometry(); const pos = [], col = [];
+  stars.forEach(([ra, dec]) => { const [x, y, z] = raDecToXYZ(ra, dec, 30000); pos.push(x, y, z); col.push(brightMult, brightMult, brightMult); });
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  return new THREE.Points(geo, new THREE.PointsMaterial({size: sizePx, sizeAttenuation: false, vertexColors: true, map: starTextures[texIndex], transparent: true, opacity, alphaTest: 0.01, blending: THREE.AdditiveBlending, depthWrite: false}));
+}
+scene.add(makeStarLayer(brightStars, 14/16, 1, 9, 5.0));
+for(let layer=0; layer<8; layer++) {
+  const count = isMobile ? 200 + layer*100 : 600 + layer*300;
+  const stars = [];
+  for(let i=0; i<count; i++) stars.push([Math.random()*24, Math.acos(2*Math.random()-1)*180/Math.PI-90]);
+  scene.add(makeStarLayer(stars, (2 + layer*1.2)/16, 0.9 - layer*0.05, layer, 5.0));
+}
+const faintCount = isMobile ? 10000 : 30000;
+const faintStars = []; for(let i=0; i<faintCount; i++) faintStars.push([Math.random()*24, Math.acos(2*Math.random()-1)*180/Math.PI-90]);
+scene.add(makeStarLayer(faintStars, 1.2/16, 0.5, 0, 5.0));
+
+// ====== МЛЕЧНЫЙ ПУТЬ ======
+const milkyWay = (() => {
+  const size = isMobile ? 2048 : 4096;
+  const c = document.createElement('canvas'); c.width = size; c.height = size/2; const ctx = c.getContext('2d');
+  ctx.fillStyle = 'rgba(0,0,0,0)'; ctx.fillRect(0, 0, size, size/2);
+  const count = isMobile ? 80000 : 250000;
+  for(let i=0; i<count; i++) {
+    const x = Math.random()*size, bandY = size/4 + Math.sin(x*.0015)*size/20, spread = size/12;
+    const y = bandY + (Math.random()-.5)*spread*2;
+    const distFromBand = Math.abs(y - bandY) / spread;
+    const b = Math.max(0, 1 - distFromBand), a = b * b * (.35 + Math.random()*.65);
+    const col = Math.random() > .4 ? '245,245,255' : '215,215,235';
+    ctx.fillStyle = `rgba(${col},${a})`; ctx.fillRect(x, y, 1+Math.random()*2, 1+Math.random()*2);
+  }
+  for(let i=0; i<count/8; i++) {
+    const x = Math.random()*size, bandY = size/4 + Math.sin(x*.0015)*size/20;
+    const y = bandY + (Math.random()-.5)*size/25;
+    ctx.fillStyle = `rgba(0,0,0,${Math.random()*0.45})`; ctx.fillRect(x, y, 1+Math.random()*3, 1+Math.random()*3);
+  }
+  const tex = new THREE.CanvasTexture(c); tex.wrapS = THREE.RepeatWrapping; return tex;
+})();
+const milkyMesh = new THREE.Mesh(new THREE.SphereGeometry(29000, isMobile?32:64, isMobile?16:32), new THREE.MeshBasicMaterial({map: milkyWay, transparent: true, opacity: .55, side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false}));
+milkyMesh.rotation.z = Math.PI * .3; milkyMesh.rotation.x = 0.4;
+scene.add(milkyMesh);
+
+// ====== ЗЕМЛЯ — ТОЛЬКО NASA BLUE MARBLE, БЕЗ ОБЛАКОВ ======
+const EARTH_URL = 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg';
+
+const earthRadius = 2000;
+const earthGroup = new THREE.Group();
+earthGroup.position.set(2800, 3200, -7200);
+scene.add(earthGroup);
+
+const texLoader = new THREE.TextureLoader();
+texLoader.setCrossOrigin('anonymous');
+
+const earthMat = new THREE.MeshStandardMaterial({
+  color: 0xffffff,
+  roughness: 0.9,
+  metalness: 0.0,
+  emissive: 0x0a1a33,
+  emissiveIntensity: 0.12
+});
+
+const earth = new THREE.Mesh(
+  new THREE.SphereGeometry(earthRadius, isMobile ? 96 : 160, isMobile ? 64 : 128),
+  earthMat
+);
+earthGroup.add(earth);
+
+texLoader.load(EARTH_URL, (tex) => {
+  tex.anisotropy = isMobile ? 4 : 16;
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  earthMat.map = tex;
+  earthMat.needsUpdate = true;
+});
+
+// Тонкая голубая атмосфера — без текстур, без облаков, без чёрных точек
+const atmo = new THREE.Mesh(
+  new THREE.SphereGeometry(earthRadius * 1.035, isMobile ? 32 : 64, isMobile ? 32 : 64),
+  new THREE.MeshBasicMaterial({
+    color: 0x66aaff,
+    transparent: true,
+    opacity: 0.15,
+    side: THREE.BackSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  })
+);
+earthGroup.add(atmo);
+
+const atmo2 = new THREE.Mesh(
+  new THREE.SphereGeometry(earthRadius * 1.09, isMobile ? 24 : 48, isMobile ? 24 : 48),
+  new THREE.MeshBasicMaterial({
+    color: 0x88bbff,
+    transparent: true,
+    opacity: 0.05,
+    side: THREE.BackSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  })
+);
+earthGroup.add(atmo2);
+
+// ====== СОЛНЦЕ ======
+const sunRadius = 640;
+const sun = new THREE.Mesh(new THREE.SphereGeometry(sunRadius, 64, 64), new THREE.MeshBasicMaterial({color: 0xfffbe6}));
+scene.add(sun);
+
+const sunLight = new THREE.DirectionalLight(0xfff4d6, isMobile ? 2 : 2.8);
+if(!isMobile) {
+  sunLight.castShadow = true; sunLight.shadow.mapSize.set(2048, 2048);
+  sunLight.shadow.camera.left = -500; sunLight.shadow.camera.right = 500;
+  sunLight.shadow.camera.top = 500; sunLight.shadow.camera.bottom = -500;
+  sunLight.shadow.camera.far = 30000; sunLight.shadow.bias = -0.0005;
+}
+scene.add(sunLight); scene.add(sunLight.target);
+scene.add(new THREE.AmbientLight(0x111118, .08));
+
+const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+  map: (() => {
+    const s = 512;
+    const c = document.createElement('canvas'); c.width = c.height = s; const x = c.getContext('2d');
+    const g = x.createRadialGradient(s/2, s/2, 0, s/2, s/2, s/2);
+    g.addColorStop(0, 'rgba(255,255,230,1)'); g.addColorStop(.06, 'rgba(255,248,200,.95)');
+    g.addColorStop(.2, 'rgba(255,230,150,.55)'); g.addColorStop(.4, 'rgba(255,210,110,.2)');
+    g.addColorStop(.7, 'rgba(255,190,80,.05)'); g.addColorStop(1, 'rgba(255,180,60,0)');
+    x.fillStyle = g; x.fillRect(0, 0, s, s);
+    return new THREE.CanvasTexture(c);
+  })(),
+  transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false
+}));
+glow.scale.set(7680, 7680, 1);
+scene.add(glow);
+
+// ====== КОМЕТЫ ======
+const comets = [];
+const cometCount = isMobile ? 3 : 6;
+
+function createComet() {
+  const group = new THREE.Group();
+  group.add(new THREE.Mesh(new THREE.SphereGeometry(2, 8, 8), new THREE.MeshBasicMaterial({color: 0xffffff})));
+  group.add(new THREE.Mesh(new THREE.SphereGeometry(8, 16, 16), new THREE.MeshBasicMaterial({color: 0x88ddff, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false})));
+  const tailLength = 200 + Math.random()*200;
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(6, tailLength, 8, 1, true), new THREE.MeshBasicMaterial({color: 0xaaddff, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false}));
+  tail.rotation.x = Math.PI/2; tail.position.z = tailLength/2;
+  group.add(tail);
+
+  const partCount = isMobile ? 40 : 80;
+  const partGeo = new THREE.BufferGeometry();
+  const partPos = new Float32Array(partCount * 3);
+  for(let i=0; i<partCount; i++) {
+    partPos[i*3] = (Math.random()-.5)*15;
+    partPos[i*3+1] = (Math.random()-.5)*15;
+    partPos[i*3+2] = Math.random()*tailLength;
+  }
+  partGeo.setAttribute('position', new THREE.BufferAttribute(partPos, 3));
+  const particles = new THREE.Points(partGeo, new THREE.PointsMaterial({color: 0xffffff, size: 1.5, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, map: starTextures[9], depthWrite: false}));
+  group.add(particles);
+
+  group.position.set((Math.random()-.5)*25000, 5000 + Math.random()*8000, (Math.random()-.5)*25000);
+  const dir = new THREE.Vector3((Math.random()-.5), -0.3 - Math.random()*0.5, (Math.random()-.5)).normalize();
+  group.userData = {dir, speed: 200 + Math.random()*400, life: 0, maxLife: 15 + Math.random()*15, tail, particles};
+  group.lookAt(group.position.clone().add(dir.clone().negate()));
+  scene.add(group);
+  return group;
+}
+for(let i=0; i<cometCount; i++) { const comet = createComet(); comet.userData.life = -Math.random()*20; comets.push(comet); }
+
+// ====== УПРАВЛЕНИЕ ======
+const keys = {};
+let yaw = 0, pitch = 0;
+let velocity = new THREE.Vector3();
+let onGround = true;
+let turboMode = false;
+let isWalking = false;
+
+addEventListener('keydown', e => keys[e.code] = true);
+addEventListener('keyup', e => keys[e.code] = false);
+
+document.getElementById('overlay').addEventListener('click', () => {
+  document.getElementById('overlay').classList.add('hidden');
+  if(isMobile) { isWalking = true; updateMode(); }
+  if(tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+});
+
+function updateMode() {
+  const modeEl = document.getElementById('mode');
+  modeEl.textContent = isWalking ? 'ход' : 'стоп';
+  modeEl.style.color = isWalking ? '#7fff7f' : '#ff7f7f';
+}
+
+let mouseDown = false, mouseButton = -1;
+renderer.domElement.addEventListener('mousedown', e => {
+  e.preventDefault(); mouseDown = true; mouseButton = e.button;
+  if(e.button === 2) { isWalking = !isWalking; updateMode(); }
+});
+addEventListener('mouseup', e => { if(e.button === 0 || e.button === 2) { mouseDown = false; mouseButton = -1; } });
+addEventListener('mousemove', e => {
+  if(mouseDown && mouseButton === 0) {
+    yaw -= e.movementX * 0.003; pitch -= e.movementY * 0.003;
+    pitch = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, pitch));
+  }
+});
+renderer.domElement.addEventListener('contextmenu', e => e.preventDefault());
+
+let lastTouchX = 0, lastTouchY = 0, lastTapTime = 0, touchStartTime = 0, touchMoved = false;
+renderer.domElement.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if(e.touches.length === 1) { lastTouchX = e.touches[0].clientX; lastTouchY = e.touches[0].clientY; touchStartTime = Date.now(); touchMoved = false; }
+}, {passive: false});
+renderer.domElement.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if(e.touches.length === 1) {
+    const dx = e.touches[0].clientX - lastTouchX, dy = e.touches[0].clientY - lastTouchY;
+    if(Math.abs(dx) > 2 || Math.abs(dy) > 2) touchMoved = true;
+    yaw -= dx * 0.005; pitch -= dy * 0.005;
+    pitch = Math.max(-Math.PI/2 + 0.1, Math.min(Math.PI/2 - 0.1, pitch));
+    lastTouchX = e.touches[0].clientX; lastTouchY = e.touches[0].clientY;
+  }
+}, {passive: false});
+renderer.domElement.addEventListener('touchend', e => {
+  e.preventDefault();
+  const now = Date.now(), touchDuration = now - touchStartTime;
+  if(!touchMoved && touchDuration < 200) {
+    if(now - lastTapTime < 300) { isWalking = !isWalking; updateMode(); if(tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); }
+    lastTapTime = now;
+  }
+}, {passive: false});
+
+const turboBtn = document.getElementById('turbo');
+turboBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  turboMode = !turboMode;
+  turboBtn.classList.toggle('active');
+  document.getElementById('speedInfo').textContent = turboMode ? 'Скорость: TURBO ×10' : 'Скорость: обычная';
+  if(tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+});
+
+// ====== ФИЗИКА ======
+const LUNAR_GRAVITY = 1.62;
+const JUMP_VELOCITY = 12;
+const BASE_SPEED = 12;
+const TURBO_MULTIPLIER = 10;
+const AIR_CONTROL = 0.35;
+const GROUND_FRICTION = 0.88;
+const AIR_FRICTION = 0.995;
+
+const horizVel = new THREE.Vector3();
+const clock = new THREE.Clock();
+const DAY_DURATION = 55;
+const NIGHT_DURATION = 10;
+const FULL_CYCLE = DAY_DURATION + NIGHT_DURATION;
+let cycleTime = 0;
+const SUN_ORBIT_RADIUS = 8000;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), .1);
+
+  cycleTime = (cycleTime + dt) % FULL_CYCLE;
+  const isDay = cycleTime < DAY_DURATION;
+  const phase = isDay ? cycleTime / DAY_DURATION : (cycleTime - DAY_DURATION) / NIGHT_DURATION;
+  const sunAngle = isDay ? phase * Math.PI : Math.PI + phase * Math.PI;
+  const sunHeight = Math.sin(sunAngle);
+  const horizontalAngle = sunAngle * 0.5;
+
+  sun.position.set(
+    camera.position.x + Math.cos(horizontalAngle) * SUN_ORBIT_RADIUS,
+    sunHeight * SUN_ORBIT_RADIUS,
+    camera.position.z + Math.sin(horizontalAngle) * SUN_ORBIT_RADIUS
+  );
+  glow.position.copy(sun.position);
+  sunLight.position.copy(sun.position);
+  sunLight.target.position.copy(camera.position);
+
+  const dayFactor = Math.max(0, sunHeight);
+  sun.visible = isDay && sunHeight > -0.05;
+  glow.visible = sun.visible;
+  glow.material.opacity = dayFactor * 0.9;
+  sunLight.intensity = (isMobile ? 2 : 2.8) * (0.05 + dayFactor * 0.95);
+
+  // Земля вращается — только сама планета, без облаков
+  earth.rotation.y += dt * 0.012;
+
+  comets.forEach(comet => {
+    const ud = comet.userData;
+    ud.life += dt;
+    if(ud.life < 0) { comet.visible = false; return; }
+    if(ud.life > ud.maxLife) {
+      ud.life = -Math.random() * 15;
+      comet.position.set((Math.random()-.5)*25000, 5000 + Math.random()*8000, (Math.random()-.5)*25000);
+      ud.dir.set((Math.random()-.5), -0.3 - Math.random()*0.5, (Math.random()-.5)).normalize();
+      ud.speed = 200 + Math.random()*400;
+      ud.maxLife = 15 + Math.random()*15;
+      comet.lookAt(comet.position.clone().add(ud.dir.clone().negate()));
+      comet.visible = false;
+      return;
+    }
+    comet.visible = true;
+    comet.position.addScaledVector(ud.dir, ud.speed * dt);
+    const pulse = 0.8 + Math.sin(ud.life * 8) * 0.2;
+    ud.tail.scale.set(pulse, 1, pulse);
+    ud.tail.material.opacity = 0.15 + Math.sin(ud.life * 5) * 0.1 + 0.1;
+    ud.particles.material.opacity = 0.4 + Math.sin(ud.life * 12) * 0.2;
+  });
+
+  const speed = (keys['ShiftLeft'] ? BASE_SPEED * 2 : BASE_SPEED) * (turboMode ? TURBO_MULTIPLIER : 1);
+  const forward = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
+  const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+  const input = new THREE.Vector3();
+  if(keys['KeyW']) input.add(forward);
+  if(keys['KeyS']) input.sub(forward);
+  if(keys['KeyD']) input.add(right);
+  if(keys['KeyA']) input.sub(right);
+  if(isWalking && input.lengthSq() === 0) input.add(forward);
+  if(input.lengthSq() > 0) input.normalize().multiplyScalar(speed);
+
+  if(onGround) {
+    horizVel.x += (input.x - horizVel.x) * Math.min(1, dt * 15);
+    horizVel.z += (input.z - horizVel.z) * Math.min(1, dt * 15);
+    horizVel.multiplyScalar(GROUND_FRICTION);
+  } else {
+    horizVel.x += input.x * dt * AIR_CONTROL;
+    horizVel.z += input.z * dt * AIR_CONTROL;
+    horizVel.multiplyScalar(AIR_FRICTION);
+    const maxAir = speed * 1.5;
+    if(horizVel.length() > maxAir) horizVel.setLength(maxAir);
+  }
+
+  const nextX = camera.position.x + horizVel.x * dt;
+  const nextZ = camera.position.z + horizVel.z * dt;
+  const LIMIT = WORLD_HALF - 5;
+  if(nextX < -LIMIT) { camera.position.x = -LIMIT; horizVel.x = 0; }
+  else if(nextX > LIMIT) { camera.position.x = LIMIT; horizVel.x = 0; }
+  else { camera.position.x = nextX; }
+  if(nextZ < -LIMIT) { camera.position.z = -LIMIT; horizVel.z = 0; }
+  else if(nextZ > LIMIT) { camera.position.z = LIMIT; horizVel.z = 0; }
+  else { camera.position.z = nextZ; }
+
+  velocity.y -= LUNAR_GRAVITY * dt;
+  if(keys['Space'] && onGround) { velocity.y = JUMP_VELOCITY; onGround = false; }
+  camera.position.y += velocity.y * dt;
+
+  const gh = groundH(camera.position.x, camera.position.z) + 2;
+  if(camera.position.y < gh) { camera.position.y = gh; velocity.y = 0; onGround = true; }
+  else { onGround = false; }
+
+  camera.rotation.order = 'YXZ';
+  camera.rotation.y = yaw;
+  camera.rotation.x = pitch;
+
+  document.getElementById('sun').textContent = isDay ? '▲ день' : '▼ ночь';
+
+  renderer.render(scene, camera);
+}
+animate();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+document.body.addEventListener('touchmove', e => {
+  if(e.target === document.body) e.preventDefault();
+}, {passive: false});
+</script>
+</body>
+</html>
