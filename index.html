@@ -104,9 +104,6 @@
 <script>
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-/* ============================================================
-   КАРТА УМЕНЬШЕНА до 21166 — иначе на 800-й сетке всё ломается
-   ============================================================ */
 const WORLD_SIZE = 21166;
 const WORLD_HALF = WORLD_SIZE / 2;
 
@@ -119,8 +116,8 @@ camera.position.set(0, 2, 0);
 const renderer = new THREE.WebGLRenderer({antialias: !isMobile, powerPreference: 'high-performance', alpha: false});
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.shadowMap.enabled = !isMobile;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+// ===== ТЕНИ ОТКЛЮЧЕНЫ — они давали линии по граням =====
+renderer.shadowMap.enabled = false;
 document.body.appendChild(renderer.domElement);
 
 document.addEventListener('gesturestart', e => e.preventDefault());
@@ -163,9 +160,7 @@ function regionAt(x) {
   return Math.min(REGION_COUNT - 1, Math.floor(t * REGION_COUNT));
 }
 
-/* ============================================================
-   ТИПЫ КРАТЕРОВ
-   ============================================================ */
+/* ===== ТИПЫ КРАТЕРОВ ===== */
 const CRATER_TYPES = {
   simple:       { depthRatio: 0.40, rimHeight: 0.18, floorFlat: 0.0,  centralPeak: 0.0,  terraceAmp: 0.0,  rimWidth: 0.28 },
   simpleMedium: { depthRatio: 0.34, rimHeight: 0.22, floorFlat: 0.05, centralPeak: 0.0,  terraceAmp: 0.02, rimWidth: 0.30 },
@@ -205,9 +200,6 @@ function addCrater(x, z, r, regionId) {
 function addDome(x, z, r, height) { domes.push({ x, z, r, height }); }
 function addFault(x, z, length, angle, height, width) { faults.push({ x, z, length, angle, height, width }); }
 
-/* ============================================================
-   ГЕНЕРАЦИЯ — БОЛЬШЕ РАВНИН и только круглые кратеры (min r = 100)
-   ============================================================ */
 function generateCraters() {
   const counts = isMobile
     ? { highland: 1500, sea: 15, plain: 8, ancient: 150, young: 250, mixed: 400 }
@@ -215,7 +207,6 @@ function generateCraters() {
 
   const segW = WORLD_SIZE / REGION_COUNT;
 
-  // Регион 0: Южное нагорье — плотно, но с круглыми кратерами
   for (let i = 0; i < counts.highland; i++) {
     const x = -WORLD_HALF + segW * Math.random();
     const z = (Math.random()-.5) * WORLD_SIZE;
@@ -227,7 +218,6 @@ function generateCraters() {
     addCrater(x, z, 500 + Math.random() * 1500, 0);
   }
 
-  // Регион 1: Моря — почти пусто
   for (let i = 0; i < counts.sea; i++) {
     const x = -WORLD_HALF + segW * (1 + Math.random());
     const z = (Math.random()-.5) * WORLD_SIZE;
@@ -239,14 +229,12 @@ function generateCraters() {
     addCrater(x, z, 800 + Math.random() * 1500, 1);
   }
 
-  // Регион 2: РАВНИНЫ — совсем мало, широкая гладь
   for (let i = 0; i < counts.plain; i++) {
     const x = -WORLD_HALF + segW * (2 + Math.random());
     const z = (Math.random()-.5) * WORLD_SIZE;
     addCrater(x, z, 150 + Math.random() * 300, 2);
   }
 
-  // Регион 3: Древние
   for (let i = 0; i < counts.ancient; i++) {
     const x = -WORLD_HALF + segW * (3 + Math.random());
     const z = (Math.random()-.5) * WORLD_SIZE;
@@ -258,7 +246,6 @@ function generateCraters() {
     addCrater(x, z, 1000 + Math.random() * 2000, 3);
   }
 
-  // Регион 4: Молодые
   for (let i = 0; i < counts.young; i++) {
     const x = -WORLD_HALF + segW * (4 + Math.random());
     const z = (Math.random()-.5) * WORLD_SIZE;
@@ -270,7 +257,6 @@ function generateCraters() {
     addCrater(x, z, 600 + Math.random() * 1500, 4);
   }
 
-  // Регион 5: Купола
   const domeCount = isMobile ? 20 : 60;
   for (let i = 0; i < domeCount; i++) {
     const x = -WORLD_HALF + segW * (5 + Math.random());
@@ -283,7 +269,6 @@ function generateCraters() {
     addCrater(x, z, 100 + Math.random() * 150, 5);
   }
 
-  // Регион 6: Разломы
   const faultCount = isMobile ? 15 : 40;
   for (let i = 0; i < faultCount; i++) {
     const x = -WORLD_HALF + segW * (6 + Math.random());
@@ -296,7 +281,6 @@ function generateCraters() {
     addCrater(x, z, 100 + Math.random() * 180, 6);
   }
 
-  // Регион 7: Смешанный
   for (let i = 0; i < counts.mixed; i++) {
     const x = -WORLD_HALF + segW * (7 + Math.random());
     const z = (Math.random()-.5) * WORLD_SIZE;
@@ -444,33 +428,9 @@ function computeGroundH(x, z) {
   return h;
 }
 
-/* ===== ТЕКСТУРА ===== */
-function moonTex() {
-  const size = isMobile ? 1024 : 2048;
-  const c = document.createElement('canvas');
-  c.width = size; c.height = size;
-  const ctx = c.getContext('2d');
-  const bg = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size*0.7);
-  bg.addColorStop(0, '#a8a8a8');
-  bg.addColorStop(0.5, '#9a9a9a');
-  bg.addColorStop(1, '#888888');
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, size, size);
-  const dustCount = isMobile ? 400000 : 1200000;
-  for (let i = 0; i < dustCount; i++) {
-    const v = 110 + Math.random()*90;
-    ctx.fillStyle = `rgba(${v},${v},${v},${Math.random()*0.14})`;
-    ctx.fillRect(Math.random()*size, Math.random()*size, 1, 1);
-  }
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(80, 80);
-  t.anisotropy = isMobile ? 4 : 16;
-  return t;
-}
-
-/* ===== ЛАНДШАФТ ===== */
-// terrainRes = 900 — ячейка сетки ≈ 23.5 единиц, min радиус 100 = 8+ ячеек
+/* ============================================================
+   МАТЕРИАЛ БЕЗ ТЕКСТУРЫ — однотонный серый, без сетки
+   ============================================================ */
 const terrainRes = isMobile ? 450 : 900;
 const vertsPerRow = terrainRes + 1;
 const heightMap = new Float32Array(vertsPerRow * vertsPerRow);
@@ -487,7 +447,7 @@ for (let i = 0; i < v.count; i++) {
   heightMap[i] = y;
 }
 
-// ОДИН проход сглаживания — сохраняет круглые кратеры
+// Проход сглаживания
 function smoothHeightMap() {
   const temp = new Float32Array(heightMap.length);
   const N = vertsPerRow;
@@ -518,17 +478,16 @@ smoothHeightMap();
 for (let i = 0; i < v.count; i++) v.setY(i, heightMap[i]);
 terrainGeo.computeVertexNormals();
 
+// Материал без текстуры — однотонный серый с лёгким отражением
 const terrainMat = new THREE.MeshStandardMaterial({
-  map: moonTex(),
-  color: 0xb8b8b8,
-  roughness: 0.98,
-  metalness: 0.01,
+  color: 0xb0b0b0,
+  roughness: 0.95,
+  metalness: 0.02,
   flatShading: false
 });
 
 /* ============================================================
-   ОБЪЕДИНЕНИЕ 9 КОПИЙ В ОДИН МЕШ + ПЕРЕСЧЁТ НОРМАЛЕЙ
-   Это убирает швы между клонами
+   ОБЪЕДИНЕНИЕ 9 КОПИЙ + ПЕРЕСЧЁТ НОРМАЛЕЙ
    ============================================================ */
 const mergedGeometries = [];
 for (let dx = -1; dx <= 1; dx++) {
@@ -547,12 +506,9 @@ const mergedGeo = THREE.BufferGeometryUtils.mergeBufferGeometries(mergedGeometri
 for (let i = 0; i < mergedGeometries.length; i++) {
   if (mergedGeometries[i] !== terrainGeo) mergedGeometries[i].dispose();
 }
-
-// КРИТИЧНО: пересчёт нормалей после объединения
 mergedGeo.computeVertexNormals();
 
 const terrain = new THREE.Mesh(mergedGeo, terrainMat);
-terrain.receiveShadow = !isMobile;
 terrain.frustumCulled = false;
 scene.add(terrain);
 
@@ -700,26 +656,17 @@ const sun = new THREE.Mesh(
 );
 scene.add(sun);
 
+// Тени отключены — без артефактов на гранях
 const sunLight = new THREE.DirectionalLight(0xfff8e8, isMobile ? 3.2 : 4.0);
-if (!isMobile) {
-  sunLight.castShadow = true;
-  sunLight.shadow.mapSize.set(2048, 2048);
-  sunLight.shadow.camera.left = -800;
-  sunLight.shadow.camera.right = 800;
-  sunLight.shadow.camera.top = 800;
-  sunLight.shadow.camera.bottom = -800;
-  sunLight.shadow.camera.far = 20000;
-  sunLight.shadow.bias = -0.0004;
-  sunLight.shadow.normalBias = 0.05;
-}
+sunLight.castShadow = false;
 scene.add(sunLight);
 scene.add(sunLight.target);
 
 const nightLight = new THREE.DirectionalLight(0x334466, 0.15);
 scene.add(nightLight);
 
-scene.add(new THREE.HemisphereLight(0x445577, 0x0a0a15, 0.12));
-scene.add(new THREE.AmbientLight(0x151825, 0.10));
+scene.add(new THREE.HemisphereLight(0x445577, 0x0a0a15, 0.15));
+scene.add(new THREE.AmbientLight(0x151825, 0.12));
 
 const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({
   map: (() => {
@@ -742,87 +689,6 @@ const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({
 sunGlow.scale.set(900, 900, 1);
 scene.add(sunGlow);
 
-/* ===== ТОЧЕЧНАЯ ПЫЛЬ — 500 пылинок ===== */
-const DUST_MAX = 500;
-const dustPositions = new Float32Array(DUST_MAX * 3);
-const dustVelocities = new Float32Array(DUST_MAX * 3);
-const dustLifetimes = new Float32Array(DUST_MAX);
-let dustCursor = 0;
-
-for (let i = 0; i < DUST_MAX; i++) dustPositions[i*3+1] = -10000;
-
-const dustGeo = new THREE.BufferGeometry();
-dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
-
-const dustTex = (() => {
-  const s = 32;
-  const c = document.createElement('canvas'); c.width = c.height = s;
-  const x = c.getContext('2d');
-  const g = x.createRadialGradient(s/2, s/2, 0, s/2, s/2, s/2);
-  g.addColorStop(0, 'rgba(235,230,220,1)');
-  g.addColorStop(0.4, 'rgba(215,210,200,0.8)');
-  g.addColorStop(0.75, 'rgba(180,175,165,0.25)');
-  g.addColorStop(1, 'rgba(160,155,145,0)');
-  x.fillStyle = g;
-  x.fillRect(0, 0, s, s);
-  return new THREE.CanvasTexture(c);
-})();
-
-const dustMat = new THREE.PointsMaterial({
-  size: 0.7, map: dustTex, transparent: true, opacity: 0.95,
-  depthWrite: false, color: 0xd0cbc0, sizeAttenuation: true
-});
-
-const dustPoints = new THREE.Points(dustGeo, dustMat);
-dustPoints.frustumCulled = false;
-scene.add(dustPoints);
-
-function spawnDustImpact(x, y, z, impactStrength) {
-  if (impactStrength < 1) return;
-  const count = Math.min(120, 30 + Math.floor(impactStrength * 10));
-  for (let i = 0; i < count; i++) {
-    const idx = dustCursor;
-    dustCursor = (dustCursor + 1) % DUST_MAX;
-    const angle = Math.random() * Math.PI * 2;
-    const radius = Math.random() * 2.5;
-    dustPositions[idx*3]   = x + Math.cos(angle) * radius;
-    dustPositions[idx*3+1] = y + Math.random() * 0.5;
-    dustPositions[idx*3+2] = z + Math.sin(angle) * radius;
-    const speed = 2 + Math.random() * impactStrength * 0.8;
-    const upSpeed = 5 + Math.random() * impactStrength * 1.3;
-    dustVelocities[idx*3]   = Math.cos(angle) * speed;
-    dustVelocities[idx*3+1] = upSpeed;
-    dustVelocities[idx*3+2] = Math.sin(angle) * speed;
-    dustLifetimes[idx] = 1.4 + Math.random() * 1.2;
-  }
-  dustGeo.attributes.position.needsUpdate = true;
-}
-
-function updateDust(dt) {
-  const positions = dustGeo.attributes.position.array;
-  let anyAlive = false;
-  for (let i = 0; i < DUST_MAX; i++) {
-    if (dustLifetimes[i] <= 0) continue;
-    anyAlive = true;
-    dustVelocities[i*3+1] -= 1.62 * dt;
-    dustVelocities[i*3]   *= 0.997;
-    dustVelocities[i*3+2] *= 0.997;
-    positions[i*3]   += dustVelocities[i*3]   * dt;
-    positions[i*3+1] += dustVelocities[i*3+1] * dt;
-    positions[i*3+2] += dustVelocities[i*3+2] * dt;
-    const groundY = sampleHeight(positions[i*3], positions[i*3+2]);
-    if (positions[i*3+1] < groundY) {
-      positions[i*3+1] = groundY;
-      dustVelocities[i*3+1] = 0;
-      dustVelocities[i*3] *= 0.3;
-      dustVelocities[i*3+2] *= 0.3;
-    }
-    dustLifetimes[i] -= dt;
-    if (dustLifetimes[i] <= 0) positions[i*3+1] = -10000;
-  }
-  if (anyAlive) dustGeo.attributes.position.needsUpdate = true;
-}
-
 /* ===== УПРАВЛЕНИЕ ===== */
 const keys = {};
 let yaw = 0, pitch = 0;
@@ -830,9 +696,6 @@ let velocityY = 0;
 let onGround = true;
 let turboMode = true;
 let isWalking = true;
-
-let previousOnGround = true;
-let landingVelocity = 0;
 
 addEventListener('keydown', e => keys[e.code] = true);
 addEventListener('keyup', e => keys[e.code] = false);
@@ -1008,7 +871,6 @@ function animate() {
   if (camera.position.z > WORLD_HALF) camera.position.z -= WORLD_SIZE;
   else if (camera.position.z < -WORLD_HALF) camera.position.z += WORLD_SIZE;
 
-  previousOnGround = onGround;
   const prevVelocityY = velocityY;
 
   velocityY -= LUNAR_GRAVITY * dt;
@@ -1032,19 +894,11 @@ function animate() {
 
   if (camera.position.y < targetY) {
     camera.position.y = targetY;
-    landingVelocity = -prevVelocityY;
     if (velocityY < 0) velocityY = 0;
     onGround = true;
   } else {
     onGround = false;
   }
-
-  if (onGround && !previousOnGround && landingVelocity > 3) {
-    const impactStrength = Math.min(20, landingVelocity * 0.5);
-    spawnDustImpact(camera.position.x, camera.position.y - 2, camera.position.z, impactStrength);
-  }
-
-  updateDust(dt);
 
   camera.rotation.order = 'YXZ';
   camera.rotation.y = yaw;
