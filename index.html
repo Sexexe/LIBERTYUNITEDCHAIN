@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<title>LUNAR ODYSSEY — ФИАСКО</title>
+<title>LUNAR ODYSSEY — ПИРКС</title>
 
 <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
 
@@ -101,38 +101,11 @@
   #syncIndicator.saved{color:#7fff7f}
   #syncIndicator.error{color:#ff9f9f}
 
-  /* ============================================================
-     ВСЕ КНОПКИ — ОДИНАКОВОЙ ФОРМЫ И РАЗМЕРА
-     ============================================================ */
-  .moon-btn{
-    position:fixed;
-    right:max(20px,env(safe-area-inset-right));
-    z-index:20;
-    background:linear-gradient(135deg,rgba(180,180,190,.85),rgba(120,120,135,.85));
-    color:#f0f4ff;
-    border:1px solid rgba(220,225,240,.35);
-    padding:12px 20px;
-    border-radius:12px;
-    font-size:12px;
-    font-weight:bold;
-    letter-spacing:1.5px;
-    cursor:pointer;
-    touch-action:manipulation;
-    backdrop-filter:blur(10px);
-    -webkit-backdrop-filter:blur(10px);
-    box-shadow:0 4px 16px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.25);
-    transition:all .2s;
-    width:180px;
-    text-align:center;
-    text-shadow:0 1px 2px rgba(0,0,0,.5);
-    font-family:inherit;
-    box-sizing:border-box;
-  }
+  .moon-btn{position:fixed;right:max(20px,env(safe-area-inset-right));z-index:20;background:linear-gradient(135deg,rgba(180,180,190,.85),rgba(120,120,135,.85));color:#f0f4ff;border:1px solid rgba(220,225,240,.35);padding:12px 20px;border-radius:12px;font-size:12px;font-weight:bold;letter-spacing:1.5px;cursor:pointer;touch-action:manipulation;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 4px 16px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.25);transition:all .2s;width:180px;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,.5);font-family:inherit;box-sizing:border-box}
   .moon-btn:hover{background:linear-gradient(135deg,rgba(200,200,210,.95),rgba(140,140,155,.95))}
   .moon-btn:active{transform:scale(.96)}
   .moon-btn.active{background:linear-gradient(135deg,rgba(230,235,255,.95),rgba(170,180,210,.95));color:#1a1a2a;border-color:rgba(255,255,255,.7);box-shadow:0 4px 24px rgba(180,210,255,.6);text-shadow:none}
   .moon-btn.playing{background:linear-gradient(135deg,rgba(230,220,200,.95),rgba(180,160,130,.9));color:#2a1f10;border-color:rgba(255,230,180,.7);text-shadow:none}
-  .moon-btn.small{padding:12px 20px;font-size:12px;width:180px}
 
   #turbo{bottom:max(20px,env(safe-area-inset-bottom))}
   #music{bottom:max(80px,env(safe-area-inset-bottom))}
@@ -160,7 +133,6 @@
     #hud{font-size:11px;padding:10px 12px;max-width:180px}
     #journalPanel{font-size:10px;padding:10px 12px;max-width:160px}
     .moon-btn{width:150px;padding:10px 14px;font-size:11px}
-    .moon-btn.small{width:150px;padding:10px 14px}
     #turbo{bottom:max(20px,env(safe-area-inset-bottom))}
     #music{bottom:max(72px,env(safe-area-inset-bottom))}
     #journalBtn{bottom:max(124px,env(safe-area-inset-bottom))}
@@ -179,7 +151,7 @@
 
 <div id="overlay">
   <h2>LUNAR ODYSSEY</h2>
-  <div class="subtitle">Ф И А С К О</div>
+  <div class="subtitle">П И Р К С</div>
   <p class="story">
     База «Пиркс», 2093 год.<br>
     Экипаж из четырёх человек вышел на связь в последний раз с разных точек Луны — и замолчал.<br><br>
@@ -316,7 +288,6 @@ const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/
 /* ============================================================
    VK BRIDGE
    ============================================================ */
-const VK_AD_UNIT_ID = 0;
 let vkBridgeReady = false;
 let isInVK = false;
 
@@ -357,29 +328,41 @@ async function fetchVKUser() {
 }
 
 /* ============================================================
-   РЕКЛАМА
+   РЕКЛАМА — VK сам подбирает и отдаёт
+   Управление: vk.com/editapp?id=54773760 → Разделы → Монетизация → Реклама
    ============================================================ */
 async function showInterstitialAd(reason = 'timer') {
-  if (!vkBridgeReady || !VK_AD_UNIT_ID) {
-    console.log(`[AD] Межстраничная (${reason}) — недоступна`);
+  if (!vkBridgeReady) {
+    console.log(`[AD] Межстраничная (${reason}) — не в VK`);
     return false;
   }
   try {
     const result = await vkBridge.send('VKWebAppShowNativeAds', {
-      ad_format: 'interstitial', ad_unit_id: VK_AD_UNIT_ID
+      ad_format: 'interstitial'
     });
+    console.log(`[AD] Межстраничная (${reason}):`, result);
     return !!result.result;
-  } catch (err) { return false; }
+  } catch (err) {
+    console.warn('[AD] Ошибка межстраничной:', err);
+    return false;
+  }
 }
 
 async function showRewardedAd() {
-  if (!vkBridgeReady || !VK_AD_UNIT_ID) return true;
+  if (!vkBridgeReady) {
+    console.log('[AD] Rewarded — не в VK');
+    return true;
+  }
   try {
     const result = await vkBridge.send('VKWebAppShowNativeAds', {
-      ad_format: 'reward', ad_unit_id: VK_AD_UNIT_ID
+      ad_format: 'reward'
     });
+    console.log('[AD] Rewarded:', result);
     return !!result.result;
-  } catch (err) { return false; }
+  } catch (err) {
+    console.warn('[AD] Ошибка rewarded:', err);
+    return false;
+  }
 }
 
 const AD_INTERVAL_MS = 10 * 60 * 1000;
@@ -396,7 +379,7 @@ function startAdTimer() {
     const remaining = Math.max(0, AD_INTERVAL_MS - elapsed);
     const min = Math.floor(remaining / 60000);
     const sec = Math.floor((remaining % 60000) / 1000);
-    if (vkBridgeReady && VK_AD_UNIT_ID) {
+    if (vkBridgeReady) {
       indicator.classList.add('visible');
       timerEl.textContent = `${min}:${sec.toString().padStart(2, '0')}`;
     } else {
@@ -415,11 +398,9 @@ document.addEventListener('visibilitychange', async () => {
 });
 
 window.addEventListener('beforeunload', () => {
-  if (vkBridgeReady && VK_AD_UNIT_ID) {
+  if (vkBridgeReady) {
     try {
-      vkBridge.send('VKWebAppShowNativeAds', {
-        ad_format: 'interstitial', ad_unit_id: VK_AD_UNIT_ID
-      });
+      vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' });
     } catch(e){}
   }
 });
@@ -803,7 +784,6 @@ function initVoiceEffects() {
   if (voiceAudioCtx) return;
   voiceAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-  // 1. Белый шум — «эфирный фон»
   const noiseBuffer = voiceAudioCtx.createBuffer(1, voiceAudioCtx.sampleRate * 2, voiceAudioCtx.sampleRate);
   const noiseData = noiseBuffer.getChannelData(0);
   for (let i = 0; i < noiseData.length; i++) {
@@ -826,7 +806,6 @@ function initVoiceEffects() {
   radioNoiseGain.connect(voiceAudioCtx.destination);
   radioNoiseNode.start();
 
-  // 2. Периодические «трески» — как помехи в рации
   radioStaticNode = voiceAudioCtx.createOscillator();
   radioStaticNode.type = 'sawtooth';
   radioStaticNode.frequency.value = 60;
@@ -836,7 +815,6 @@ function initVoiceEffects() {
   radioStaticGain.connect(voiceAudioCtx.destination);
   radioStaticNode.start();
 
-  // Периодически «трещим»
   radioStaticInterval = setInterval(() => {
     if (!voiceEnabled || !radioStaticGain) return;
     if (Math.random() > 0.6 && radioNoiseGain.gain.value > 0.01) {
@@ -865,9 +843,8 @@ function speak(text) {
 
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = 'ru-RU';
-  // КЛЮЧЕВЫЕ ПАРАМЕТРЫ ДЛЯ НИЗКОГО МУЖСКОГО ГОЛОСА:
-  utter.rate = 0.78;    // медленнее — оператор центра управления
-  utter.pitch = 0.35;   // максимально низкий
+  utter.rate = 0.78;
+  utter.pitch = 0.35;
   utter.volume = 0.9;
 
   const voices = window.speechSynthesis.getVoices();
@@ -1226,7 +1203,7 @@ sunGlow.scale.set(900, 900, 1);
 scene.add(sunGlow);
 
 /* ============================================================
-   ФРАГМЕНТЫ — данные
+   ФРАГМЕНТЫ
    ============================================================ */
 const CREW_FRAGMENTS = [
   { id: 0, region: 0, type: 'backpack', title: 'Фрагмент 1/12 — Рюкзак инженера Лоу', text: 'День 14. Мы сняли показания сейсмографов. Регион отзывается на удар не так, как должен. Не как пустота и не как порода. Как будто что-то вздыхает под нами. Пиркс-старший сказал: продолжать по плану. Я — записал. Это первое, что я записал отдельно от протокола.' },
@@ -1259,7 +1236,6 @@ function createFragmentMesh(type, isHidden = false) {
   const group = new THREE.Group();
 
   if (type === 'backpack') {
-    // ===== РЮКЗАК — 7 частей =====
     const mainColor = isHidden ? 0x884466 : 0x7a6a4a;
     const darkColor = isHidden ? 0x552244 : 0x4a3a2a;
 
@@ -1313,7 +1289,6 @@ function createFragmentMesh(type, isHidden = false) {
     group.add(patch);
 
   } else if (type === 'tool') {
-    // ===== ИНСТРУМЕНТ — 6 частей =====
     const mainColor = isHidden ? 0xcc88aa : 0xaaaaaa;
     const darkColor = isHidden ? 0x663355 : 0x445566;
     const angle = Math.PI / 5;
@@ -1328,7 +1303,6 @@ function createFragmentMesh(type, isHidden = false) {
     handle.rotation.z = angle;
     group.add(handle);
 
-    // Обмотка — 5 тонких колец
     for (let i = 0; i < 5; i++) {
       const ringGeo = new THREE.TorusGeometry(0.17, 0.015, 6, 12);
       const ringMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.9 });
@@ -1365,7 +1339,6 @@ function createFragmentMesh(type, isHidden = false) {
     group.add(screen);
 
   } else {
-    // ===== ТКАНЬ — 4 части =====
     const mainColor = isHidden ? 0xcc6699 : 0xcc8844;
     const darkColor = isHidden ? 0x663355 : 0x553311;
 
@@ -1391,7 +1364,6 @@ function createFragmentMesh(type, isHidden = false) {
     cloth2.rotation.y = Math.PI / 5;
     group.add(cloth2);
 
-    // Бахрома — 8 полосок
     for (let i = 0; i < 8; i++) {
       const fringeGeo = new THREE.PlaneGeometry(0.04, 0.15);
       const fringeMat = new THREE.MeshStandardMaterial({
@@ -1403,7 +1375,6 @@ function createFragmentMesh(type, isHidden = false) {
       group.add(fringe);
     }
 
-    // Пятно от грязи
     const stainGeo = new THREE.CircleGeometry(0.18, 12);
     const stainMat = new THREE.MeshStandardMaterial({
       color: 0x442211, transparent: true, opacity: 0.6, side: THREE.DoubleSide
@@ -1414,7 +1385,6 @@ function createFragmentMesh(type, isHidden = false) {
     group.add(stain);
   }
 
-  // Свечение вокруг
   const glowColor = isHidden ? 0xff66aa : 0x6699dd;
   const glowGeo = new THREE.SphereGeometry(isHidden ? 4.5 : 3.5, 16, 16);
   const glowMat = new THREE.MeshBasicMaterial({
@@ -1464,7 +1434,7 @@ const ACHIEVEMENTS = [
   { id: 'hidden3', icon: '💠', title: 'Знаток Лема', desc: 'Найти все 3 скрытых', check: () => hiddenCount >= 3 },
   { id: 'noTurbo', icon: '🚶', title: 'Пешеход', desc: 'Найти 3 фрагмента без TURBO', check: () => foundWithoutTurbo >= 3 },
   { id: 'nightOwl', icon: '🌙', title: 'Ночной житель', desc: 'Найти фрагмент ночью', check: () => foundAtNight },
-  { id: 'finale', icon: '🎬', title: 'Фиаско', desc: 'Дойти до финала', check: () => finaleReached }
+  { id: 'finale', icon: '🎬', title: 'Пиркс', desc: 'Дойти до финала', check: () => finaleReached }
 ];
 const unlockedAchievements = new Set();
 
@@ -1808,7 +1778,7 @@ function chooseFinal(choice) {
       Под текстом — приписка, которую никто не отправлял:</p>
       <p style="color:#ffd77f;font-style:italic;font-size:14px;line-height:2;text-align:center;margin-top:18px">
       «Не отправляйте их.<br>Они не вернутся.<br>Никто не возвращается».</p>
-      <p style="color:#ffd77f;font-size:11px;letter-spacing:2px;text-align:center;margin-top:24px">— КОНЕЦ —<br>«Фиаско»</p>`;
+      <p style="color:#ffd77f;font-size:11px;letter-spacing:2px;text-align:center;margin-top:24px">— КОНЕЦ —<br>«Пиркс»</p>`;
     spoken = 'Вы передаёте сигнал. Ответ приходит слишком быстро. Не отправляйте их. Никто не возвращается.';
     playChime(110, 4, 'sine');
   }
