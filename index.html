@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Lunar Odyssey</title>
+<title>LUNAR ODYSSEY — ФИАСКО</title>
+
+<script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{width:100%;height:100%;overflow:hidden;position:fixed;top:0;left:0;background:#000;font-family:-apple-system,system-ui,sans-serif;color:#cfe8ff;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
@@ -13,61 +16,162 @@
   #hud{position:fixed;top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));z-index:10;background:rgba(0,0,0,.8);padding:12px 16px;border-radius:10px;border:1px solid rgba(157,216,255,.3);font-size:12px;line-height:1.7;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);max-width:240px}
   #hud b{color:#9fd8ff;letter-spacing:1.5px;font-size:13px}
   #region{color:#ffd77f}
+  #extraFound{color:#ff9966}
 
-  .moon-btn {
-    position: fixed;
-    right: max(20px, env(safe-area-inset-right));
-    z-index: 20;
-    background: linear-gradient(135deg, rgba(180,180,190,0.85), rgba(120,120,135,0.85));
-    color: #f0f4ff;
-    border: 1px solid rgba(220,225,240,0.35);
-    padding: 14px 26px;
-    border-radius: 50px;
-    font-size: 14px;
-    font-weight: bold;
-    letter-spacing: 2px;
-    cursor: pointer;
-    touch-action: manipulation;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow:
-      0 4px 16px rgba(0,0,0,0.5),
-      inset 0 1px 0 rgba(255,255,255,0.25),
-      inset 0 -1px 0 rgba(0,0,0,0.2);
-    transition: all 0.2s;
-    min-width: 160px;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  #journalPanel{position:fixed;bottom:max(20px,env(safe-area-inset-bottom));left:max(20px,env(safe-area-inset-left));z-index:12;background:rgba(0,0,0,.85);padding:12px 16px;border-radius:10px;border:1px solid rgba(157,216,255,.3);font-size:11px;line-height:1.7;color:#cfe8ff;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);max-width:240px;font-family:ui-monospace,Menlo,monospace}
+  #journalPanel b{color:#9fd8ff;letter-spacing:1.5px;font-size:10px;display:block;margin-bottom:6px}
+  #foundCount{color:#7fff7f;font-weight:bold}
+  #nearestSignal{color:#ffd77f}
+  #journalPanel .hint{font-size:9px;opacity:.6;margin-top:8px}
+  #achievementHint{color:#ffd77f;font-size:9px;margin-top:4px;display:none}
+
+  #compass{position:fixed;top:max(12px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:11;text-align:center;color:#ffd77f;font-family:ui-monospace,monospace;font-size:11px;text-shadow:0 0 8px rgba(255,215,127,.8);pointer-events:none}
+  #compassArrow{font-size:24px;line-height:1;transition:transform .1s linear;display:inline-block}
+  #compassDistance{margin-top:-2px;opacity:.85}
+
+  #logMessage{position:fixed;top:20%;left:50%;transform:translateX(-50%);z-index:150;background:rgba(0,0,0,.92);border:1px solid rgba(157,216,255,.5);border-radius:12px;padding:20px 28px;max-width:min(640px,85vw);color:#cfe8ff;font-style:italic;font-size:13px;line-height:1.8;text-align:left;pointer-events:none;transition:opacity .5s;box-shadow:0 0 30px rgba(157,216,255,.2)}
+  #logMessage.hidden{opacity:0;pointer-events:none}
+  #logMessage .prefix{color:#ffd77f;font-style:normal;font-family:ui-monospace,monospace;font-size:10px;letter-spacing:1.5px;display:block;margin-bottom:10px}
+
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .3s}
+  .modal.hidden{display:none}
+  .modal-content{max-width:min(760px,92vw);max-height:88vh;overflow-y:auto;background:rgba(10,15,25,.96);border:1px solid rgba(157,216,255,.4);border-radius:14px;padding:28px 32px;color:#cfe8ff;font-size:13px;line-height:1.8;box-shadow:0 0 60px rgba(157,216,255,.15)}
+  .modal-content h3{color:#9fd8ff;letter-spacing:3px;font-size:14px;margin-bottom:20px;font-weight:normal;text-transform:uppercase;border-bottom:1px solid rgba(157,216,255,.2);padding-bottom:12px}
+  .modal-content button{background:linear-gradient(135deg,rgba(180,180,190,.9),rgba(120,120,135,.9));color:#f0f4ff;border:1px solid rgba(220,225,240,.4);padding:12px 28px;border-radius:30px;font-weight:bold;letter-spacing:2px;cursor:pointer;margin:14px 8px 0 0;font-size:12px;font-family:inherit;transition:all .2s}
+  .modal-content button:hover{background:linear-gradient(135deg,rgba(210,215,235,.95),rgba(150,155,180,.95));box-shadow:0 0 20px rgba(157,216,255,.4)}
+  .modal-content button:active{transform:scale(.96)}
+  .modal-content button:disabled{opacity:.5;cursor:not-allowed}
+
+  .journal-region{color:#ffd77f;font-family:ui-monospace,monospace;font-size:11px;letter-spacing:1px;margin-top:20px;margin-bottom:8px;text-transform:uppercase;border-top:1px solid rgba(255,215,127,.2);padding-top:14px}
+  .journal-region:first-child{border-top:none;margin-top:0;padding-top:0}
+  .journal-entry{padding:10px 0 14px 0}
+  .journal-entry .num{color:#ffd77f;font-family:ui-monospace,monospace;font-size:10px;margin-bottom:6px;opacity:.75}
+  .journal-entry .text{font-style:italic;color:#b8c8e0;line-height:1.75}
+  .journal-entry.extra .num{color:#ff9966}
+  .journal-entry.extra .text{color:#e0c8a0}
+  .journal-entry.extra::before{content:'◈ ';color:#ff9966}
+
+  .tabs{display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid rgba(157,216,255,.2);padding-bottom:12px;flex-wrap:wrap}
+  .tab-btn{background:transparent;border:1px solid rgba(157,216,255,.3);color:#9fd8ff;padding:8px 18px;border-radius:20px;font-size:11px;letter-spacing:1.5px;cursor:pointer;font-family:inherit;transition:all .2s}
+  .tab-btn:hover{background:rgba(157,216,255,.1)}
+  .tab-btn.active{background:rgba(157,216,255,.2);color:#fff;border-color:rgba(157,216,255,.6)}
+  .tab-content.hidden{display:none}
+
+  #mapCanvas{display:block;width:100%;max-width:600px;margin:0 auto;background:rgba(0,10,20,.9);border:1px solid rgba(157,216,255,.3);border-radius:10px;image-rendering:pixelated}
+  .map-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px;font-size:10px;font-family:ui-monospace,monospace}
+  .map-legend span{display:flex;align-items:center;gap:6px}
+  .map-legend .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+  .achievement{display:flex;align-items:center;gap:14px;padding:12px;border:1px solid rgba(157,216,255,.15);border-radius:10px;margin-bottom:10px;transition:all .2s}
+  .achievement.unlocked{background:rgba(157,216,255,.06);border-color:rgba(255,215,127,.4)}
+  .achievement.locked{opacity:.45}
+  .achievement .icon{font-size:26px;width:34px;text-align:center;filter:grayscale(1)}
+  .achievement.unlocked .icon{filter:none}
+  .achievement .info{flex:1}
+  .achievement .title{color:#ffd77f;font-size:12px;letter-spacing:1px;margin-bottom:3px}
+  .achievement .desc{color:#b8c8e0;font-size:10px;font-style:italic;line-height:1.5}
+
+  .leader-row{display:flex;align-items:center;gap:14px;padding:12px;border:1px solid rgba(157,216,255,.15);border-radius:10px;margin-bottom:8px;transition:all .2s}
+  .leader-row.me{background:rgba(255,215,127,.08);border-color:rgba(255,215,127,.5);box-shadow:0 0 20px rgba(255,215,127,.15)}
+  .leader-row .rank{font-family:ui-monospace,monospace;font-size:18px;font-weight:bold;width:40px;text-align:center;color:#9fd8ff}
+  .leader-row.top1 .rank{color:#ffd700;font-size:22px}
+  .leader-row.top2 .rank{color:#c0c0c0;font-size:20px}
+  .leader-row.top3 .rank{color:#cd7f32;font-size:20px}
+  .leader-row .avatar{width:36px;height:36px;border-radius:50%;background:rgba(157,216,255,.15);border:1px solid rgba(157,216,255,.3);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;overflow:hidden}
+  .leader-row .avatar img{width:100%;height:100%;object-fit:cover}
+  .leader-row .info{flex:1;min-width:0}
+  .leader-row .name{color:#cfe8ff;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .leader-row .you{display:inline-block;font-size:9px;color:#ffd77f;letter-spacing:1px;margin-left:6px}
+  .leader-row .score{font-family:ui-monospace,monospace;text-align:right;flex-shrink:0}
+  .leader-row .score .main{font-size:16px;color:#7fff7f;font-weight:bold}
+  .leader-row .score .sub{font-size:9px;color:#888;letter-spacing:1px}
+
+  #achievementToast{position:fixed;top:max(80px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:160;background:rgba(10,20,35,.95);border:1px solid rgba(255,215,127,.6);border-radius:12px;padding:14px 24px;color:#ffd77f;font-size:12px;letter-spacing:1.5px;box-shadow:0 0 40px rgba(255,215,127,.3);pointer-events:none;opacity:0;transition:opacity .5s;text-align:center;max-width:340px}
+  #achievementToast.visible{opacity:1}
+  #achievementToast .label{font-size:9px;color:#9fd8ff;letter-spacing:2px;display:block;margin-bottom:6px}
+  #achievementToast .title{font-size:14px;font-weight:bold}
+  #achievementToast .desc{font-size:10px;color:#b8c8e0;font-style:italic;margin-top:6px;font-weight:normal;letter-spacing:0}
+
+  #adIndicator{position:fixed;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:50;background:rgba(0,0,0,.7);border:1px solid rgba(157,216,255,.25);border-radius:8px;padding:6px 12px;font-size:10px;color:#9fd8ff;letter-spacing:1px;font-family:ui-monospace,monospace;display:none}
+  #adIndicator.visible{display:block}
+
+  #syncIndicator{position:fixed;top:max(12px,env(safe-area-inset-top));right:max(90px,calc(env(safe-area-inset-right) + 90px));z-index:50;background:rgba(0,0,0,.7);border:1px solid rgba(157,216,255,.25);border-radius:8px;padding:6px 12px;font-size:10px;color:#9fd8ff;letter-spacing:1px;font-family:ui-monospace,monospace;display:none;transition:color .3s}
+  #syncIndicator.visible{display:block}
+  #syncIndicator.saving{color:#ffd77f}
+  #syncIndicator.saved{color:#7fff7f}
+  #syncIndicator.error{color:#ff9f9f}
+
+  /* ============================================================
+     ВСЕ КНОПКИ — ОДИНАКОВОЙ ФОРМЫ И РАЗМЕРА
+     ============================================================ */
+  .moon-btn{
+    position:fixed;
+    right:max(20px,env(safe-area-inset-right));
+    z-index:20;
+    background:linear-gradient(135deg,rgba(180,180,190,.85),rgba(120,120,135,.85));
+    color:#f0f4ff;
+    border:1px solid rgba(220,225,240,.35);
+    padding:12px 20px;
+    border-radius:12px;
+    font-size:12px;
+    font-weight:bold;
+    letter-spacing:1.5px;
+    cursor:pointer;
+    touch-action:manipulation;
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    box-shadow:0 4px 16px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.25);
+    transition:all .2s;
+    width:180px;
+    text-align:center;
+    text-shadow:0 1px 2px rgba(0,0,0,.5);
+    font-family:inherit;
+    box-sizing:border-box;
   }
-  .moon-btn:hover {
-    background: linear-gradient(135deg, rgba(200,200,210,0.95), rgba(140,140,155,0.95));
-  }
-  .moon-btn:active { transform: scale(0.96); }
-  .moon-btn.active {
-    background: linear-gradient(135deg, rgba(230,235,255,0.95), rgba(170,180,210,0.95));
-    color: #1a1a2a;
-    border-color: rgba(255,255,255,0.7);
-    box-shadow: 0 4px 24px rgba(180,210,255,0.6);
-    text-shadow: none;
-  }
-  .moon-btn.playing {
-    background: linear-gradient(135deg, rgba(230,220,200,0.95), rgba(180,160,130,0.9));
-    color: #2a1f10;
-    border-color: rgba(255,230,180,0.7);
-    text-shadow: none;
-  }
-  #turbo { bottom: max(20px, env(safe-area-inset-bottom)); }
-  #music { bottom: max(80px, env(safe-area-inset-bottom)); }
+  .moon-btn:hover{background:linear-gradient(135deg,rgba(200,200,210,.95),rgba(140,140,155,.95))}
+  .moon-btn:active{transform:scale(.96)}
+  .moon-btn.active{background:linear-gradient(135deg,rgba(230,235,255,.95),rgba(170,180,210,.95));color:#1a1a2a;border-color:rgba(255,255,255,.7);box-shadow:0 4px 24px rgba(180,210,255,.6);text-shadow:none}
+  .moon-btn.playing{background:linear-gradient(135deg,rgba(230,220,200,.95),rgba(180,160,130,.9));color:#2a1f10;border-color:rgba(255,230,180,.7);text-shadow:none}
+  .moon-btn.small{padding:12px 20px;font-size:12px;width:180px}
+
+  #turbo{bottom:max(20px,env(safe-area-inset-bottom))}
+  #music{bottom:max(80px,env(safe-area-inset-bottom))}
+  #journalBtn{bottom:max(140px,env(safe-area-inset-bottom))}
+  #voiceBtn{bottom:max(200px,env(safe-area-inset-bottom))}
+  #achievementsBtn{bottom:max(260px,env(safe-area-inset-bottom))}
+  #leaderboardBtn{bottom:max(320px,env(safe-area-inset-bottom))}
 
   #crosshair{position:fixed;top:50%;left:50%;width:4px;height:4px;background:rgba(255,255,255,.6);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:5;box-shadow:0 0 6px rgba(157,216,255,.5)}
+
   #overlay{position:fixed;inset:0;background:radial-gradient(circle,#111 0%,#000 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;cursor:pointer;transition:opacity 1s;padding:20px}
   #overlay.hidden{opacity:0;pointer-events:none}
-  #overlay h2{font-size:36px;letter-spacing:6px;margin:0;color:#cfe8ff;text-align:center}
-  #overlay p{color:#888;margin-top:16px;letter-spacing:2px;text-align:center;padding:0 20px;font-size:11px;line-height:1.7}
+  #overlay h2{font-size:36px;letter-spacing:8px;margin:0;color:#cfe8ff;text-align:center;font-weight:300}
+  #overlay .subtitle{color:#9fd8ff;margin-top:6px;letter-spacing:6px;font-size:11px;opacity:.8}
+  #overlay p{color:#888;margin-top:22px;letter-spacing:2px;text-align:center;padding:0 20px;font-size:11px;line-height:1.8;max-width:420px}
+  #overlay .story{color:#b8c8e0;font-style:italic;margin-top:22px;font-size:12px;line-height:1.8;max-width:460px;text-align:center}
+  #overlay .hint{color:#ffd77f;margin-top:24px;font-size:10px;letter-spacing:2px}
+  #overlay .quote{color:#666;font-style:italic;margin-top:18px;font-size:10px;letter-spacing:1px;max-width:400px;text-align:center;line-height:1.6}
+  #overlay .playerInfo{color:#9fd8ff;margin-top:16px;font-size:10px;letter-spacing:1.5px;font-family:ui-monospace,monospace;opacity:.8}
+
+  #easterEgg{position:fixed;bottom:max(20px,env(safe-area-inset-bottom));right:max(280px,calc(env(safe-area-inset-right) + 280px));z-index:13;background:rgba(20,10,30,.9);border:1px solid rgba(255,150,150,.4);color:#ffb8b8;padding:10px 14px;border-radius:8px;font-size:10px;font-style:italic;letter-spacing:1px;max-width:220px;line-height:1.5;opacity:0;transition:opacity 1.2s;pointer-events:none}
+  #easterEgg.visible{opacity:.85}
+
   @media (max-width:768px){
     #hud{font-size:11px;padding:10px 12px;max-width:180px}
-    #hud b{font-size:12px}
-    .moon-btn { padding: 12px 20px; font-size: 13px; min-width: 140px; }
-    #overlay h2{font-size:26px}
+    #journalPanel{font-size:10px;padding:10px 12px;max-width:160px}
+    .moon-btn{width:150px;padding:10px 14px;font-size:11px}
+    .moon-btn.small{width:150px;padding:10px 14px}
+    #turbo{bottom:max(20px,env(safe-area-inset-bottom))}
+    #music{bottom:max(72px,env(safe-area-inset-bottom))}
+    #journalBtn{bottom:max(124px,env(safe-area-inset-bottom))}
+    #voiceBtn{bottom:max(176px,env(safe-area-inset-bottom))}
+    #achievementsBtn{bottom:max(228px,env(safe-area-inset-bottom))}
+    #leaderboardBtn{bottom:max(280px,env(safe-area-inset-bottom))}
+    #overlay h2{font-size:24px;letter-spacing:5px}
+    #overlay .subtitle{font-size:9px;letter-spacing:3px}
+    #logMessage{font-size:12px;padding:16px 20px;max-width:90vw}
+    #easterEgg{right:auto;left:50%;transform:translateX(-50%);bottom:max(340px,env(safe-area-inset-bottom));max-width:280px}
+    .modal-content{padding:20px 22px}
   }
 </style>
 </head>
@@ -75,24 +179,129 @@
 
 <div id="overlay">
   <h2>LUNAR ODYSSEY</h2>
-  <p>НАЖМИТЕ, ЧТОБЫ НАЧАТЬ</p>
-  <p style="margin-top:30px;opacity:.7">
-    МЫШЬ — обзор (без нажатия)<br>
-    WASD — движение · SPACE — прыжок<br>
-    ПКМ — ход/стоп · TURBO ×50
+  <div class="subtitle">Ф И А С К О</div>
+  <p class="story">
+    База «Пиркс», 2093 год.<br>
+    Экипаж из четырёх человек вышел на связь в последний раз с разных точек Луны — и замолчал.<br><br>
+    Вы — оператор ровера с орбиты. Ваша задача — найти 12 следов, собрать бортовой журнал и понять, что произошло.
   </p>
+  <p style="margin-top:22px;opacity:.7">
+    МЫШЬ — обзор · WASD — движение · SPACE — прыжок<br>
+    ПКМ — ход/стоп · TURBO ×50 · J — журнал · V — голос
+  </p>
+  <p class="hint">НАЖМИТЕ, ЧТОБЫ НАЧАТЬ</p>
+  <p class="quote">«Мы не ищем других. Мы ищем себя — в чужих зеркалах».<br>— Станислав Лем</p>
+  <p class="playerInfo" id="playerInfo"></p>
 </div>
 
+<div id="adIndicator">РЕКЛАМА — <span id="adTimer">—</span></div>
+<div id="syncIndicator">☁ —</div>
+
 <div id="hud">
-  <b>◆ LUNAR ODYSSEY</b><br>
+  <b>◆ БАЗА «ПИРКС»</b><br>
   Солнце: <span id="sun">—</span><br>
   Режим: <span id="mode">ход</span><br>
   Регион: <span id="region">—</span><br>
   <span id="speedInfo">Скорость: TURBO ×50</span>
 </div>
 
+<div id="compass">
+  <div id="compassArrow">▲</div>
+  <div id="compassDistance">—</div>
+</div>
+
+<div id="journalPanel">
+  <b>◆ БОРТОВОЙ ЖУРНАЛ</b>
+  <div>Найдено: <span id="foundCount">0</span>/12</div>
+  <div>Скрытых: <span id="extraFound">0</span>/3</div>
+  <div>Ближайший: <span id="nearestSignal">—</span></div>
+  <div class="hint">J — журнал · V — голос</div>
+  <div id="achievementHint">🏆 <span id="achievementCount">0</span>/8 достижений</div>
+</div>
+
+<div id="logMessage" class="hidden">
+  <span class="prefix" id="logPrefix"></span>
+  <span id="logText"></span>
+</div>
+
+<div id="easterEgg"></div>
+
+<div id="achievementToast">
+  <span class="label">◆ ДОСТИЖЕНИЕ ОТКРЫТО</span>
+  <div class="title" id="toastTitle"></div>
+  <div class="desc" id="toastDesc"></div>
+</div>
+
+<div id="journalModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>◆ Бортовой журнал</h3>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('entries')">📖 ЗАПИСИ</button>
+      <button class="tab-btn" onclick="switchTab('map')">🗺 КАРТА</button>
+    </div>
+    <div id="tabEntries" class="tab-content">
+      <div id="journalEntries"></div>
+    </div>
+    <div id="tabMap" class="tab-content hidden">
+      <canvas id="mapCanvas" width="600" height="600"></canvas>
+      <div class="map-legend">
+        <span><span class="dot" style="background:#b0b0b0"></span>Южное нагорье</span>
+        <span><span class="dot" style="background:#7a7a90"></span>Моря</span>
+        <span><span class="dot" style="background:#a8b0a8"></span>Равнины</span>
+        <span><span class="dot" style="background:#a0a0a0"></span>Древние кратеры</span>
+        <span><span class="dot" style="background:#d8d8d8"></span>Молодые ударные</span>
+        <span><span class="dot" style="background:#c0b8a8"></span>Купола</span>
+        <span><span class="dot" style="background:#909090"></span>Разломы</span>
+        <span><span class="dot" style="background:#b8b8b8"></span>Смешанный</span>
+        <span style="color:#7fff7f">● найденные</span>
+        <span style="color:#ff9966">● скрытые</span>
+        <span style="color:#ffd77f">▲ вы</span>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:20px">
+      <button onclick="closeJournal()">ЗАКРЫТЬ</button>
+      <button onclick="exportJournal()">ЭКСПОРТ</button>
+    </div>
+  </div>
+</div>
+
+<div id="achievementsModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>◆ Достижения</h3>
+    <div id="achievementsList"></div>
+    <div style="text-align:center;margin-top:20px">
+      <button onclick="closeAchievements()">ЗАКРЫТЬ</button>
+    </div>
+  </div>
+</div>
+
+<div id="leaderboardModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>◆ Рейтинг исследователей</h3>
+    <div id="leaderboardList">
+      <div style="text-align:center;padding:40px;color:#888;font-style:italic">Загрузка...</div>
+    </div>
+    <div style="text-align:center;margin-top:20px">
+      <button onclick="closeLeaderboard()">ЗАКРЫТЬ</button>
+      <button onclick="refreshLeaderboard()">ОБНОВИТЬ</button>
+    </div>
+  </div>
+</div>
+
+<div id="finalModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>◆ Последний сигнал</h3>
+    <div id="finalText"></div>
+    <div id="finalChoices" style="text-align:center;margin-top:20px"></div>
+  </div>
+</div>
+
 <div id="crosshair"></div>
 <button id="music" class="moon-btn">🎵 Mission Control</button>
+<button id="journalBtn" class="moon-btn">📓 Журнал</button>
+<button id="voiceBtn" class="moon-btn">🔊 Голос: вкл</button>
+<button id="achievementsBtn" class="moon-btn">🏆 Достижения</button>
+<button id="leaderboardBtn" class="moon-btn">🏅 Рейтинг</button>
 <button id="turbo" class="moon-btn active">TURBO</button>
 
 <audio id="radio" loop crossorigin="anonymous">
@@ -104,73 +313,652 @@
 <script>
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
+/* ============================================================
+   VK BRIDGE
+   ============================================================ */
+const VK_AD_UNIT_ID = 0;
+let vkBridgeReady = false;
+let isInVK = false;
+
+async function initVKBridge() {
+  try {
+    if (typeof vkBridge === 'undefined') {
+      console.log('[VK] Bridge не загружен');
+      return;
+    }
+    await vkBridge.send('VKWebAppInit', {});
+    vkBridgeReady = true;
+    isInVK = true;
+    console.log('[VK] Bridge инициализирован');
+    await fetchVKUser();
+    document.getElementById('playerInfo').textContent = myVkName ? `◆ ${myVkName}` : '';
+  } catch (err) {
+    console.log('[VK] Не в VK:', err);
+    vkBridgeReady = false;
+  }
+}
+
+let myVkId = null;
+let myVkName = 'Гость';
+let myVkPhoto = null;
+
+async function fetchVKUser() {
+  if (!vkBridgeReady) return;
+  try {
+    const user = await vkBridge.send('VKWebAppGetUserInfo', {});
+    myVkId = String(user.id);
+    myVkName = `${user.first_name} ${user.last_name}`.trim() || 'Оператор';
+    myVkPhoto = user.photo_100 || user.photo_200 || null;
+    console.log(`[VK] Игрок: ${myVkName} (id ${myVkId})`);
+    updateLeaderboardEntry();
+  } catch(e) {
+    console.warn('[VK] Не удалось получить данные:', e);
+  }
+}
+
+/* ============================================================
+   РЕКЛАМА
+   ============================================================ */
+async function showInterstitialAd(reason = 'timer') {
+  if (!vkBridgeReady || !VK_AD_UNIT_ID) {
+    console.log(`[AD] Межстраничная (${reason}) — недоступна`);
+    return false;
+  }
+  try {
+    const result = await vkBridge.send('VKWebAppShowNativeAds', {
+      ad_format: 'interstitial', ad_unit_id: VK_AD_UNIT_ID
+    });
+    return !!result.result;
+  } catch (err) { return false; }
+}
+
+async function showRewardedAd() {
+  if (!vkBridgeReady || !VK_AD_UNIT_ID) return true;
+  try {
+    const result = await vkBridge.send('VKWebAppShowNativeAds', {
+      ad_format: 'reward', ad_unit_id: VK_AD_UNIT_ID
+    });
+    return !!result.result;
+  } catch (err) { return false; }
+}
+
+const AD_INTERVAL_MS = 10 * 60 * 1000;
+let adTimerStart = Date.now();
+let adTimerInterval = null;
+
+function startAdTimer() {
+  adTimerStart = Date.now();
+  const indicator = document.getElementById('adIndicator');
+  const timerEl = document.getElementById('adTimer');
+  if (adTimerInterval) clearInterval(adTimerInterval);
+  adTimerInterval = setInterval(() => {
+    const elapsed = Date.now() - adTimerStart;
+    const remaining = Math.max(0, AD_INTERVAL_MS - elapsed);
+    const min = Math.floor(remaining / 60000);
+    const sec = Math.floor((remaining % 60000) / 1000);
+    if (vkBridgeReady && VK_AD_UNIT_ID) {
+      indicator.classList.add('visible');
+      timerEl.textContent = `${min}:${sec.toString().padStart(2, '0')}`;
+    } else {
+      indicator.classList.remove('visible');
+    }
+    if (remaining === 0) {
+      showInterstitialAd('10min').then(() => { adTimerStart = Date.now(); });
+    }
+  }, 1000);
+}
+
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'hidden') {
+    await showInterstitialAd('leave');
+  }
+});
+
+window.addEventListener('beforeunload', () => {
+  if (vkBridgeReady && VK_AD_UNIT_ID) {
+    try {
+      vkBridge.send('VKWebAppShowNativeAds', {
+        ad_format: 'interstitial', ad_unit_id: VK_AD_UNIT_ID
+      });
+    } catch(e){}
+  }
+});
+
+initVKBridge().then(() => {
+  startAdTimer();
+  if (!myVkId) {
+    let saved = null;
+    try { saved = localStorage.getItem('lunar_vk_id'); } catch(e){}
+    if (saved) {
+      myVkId = saved;
+    } else {
+      myVkId = 'local_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+      try { localStorage.setItem('lunar_vk_id', myVkId); } catch(e){}
+    }
+    myVkName = 'Гость ' + myVkId.slice(-4);
+    document.getElementById('playerInfo').textContent = `◆ ${myVkName}`;
+  }
+});
+
+/* ============================================================
+   ОБЛАЧНОЕ СОХРАНЕНИЕ
+   ============================================================ */
+const SAVE_KEY = 'lunar_fiasco_save_v4';
+const VK_STORAGE_KEY = 'lunar_fiasco_progress';
+
+let syncStatus = 'idle';
+let syncTimeout = null;
+let lastSyncTime = 0;
+
+function updateSyncIndicator() {
+  const el = document.getElementById('syncIndicator');
+  if (!vkBridgeReady) { el.classList.remove('visible'); return; }
+  el.classList.add('visible');
+  el.classList.remove('saving', 'saved', 'error');
+  const now = new Date();
+  const t = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+  switch (syncStatus) {
+    case 'loading': el.textContent = '☁ загрузка...'; break;
+    case 'saving': el.textContent = '☁ сохранение...'; el.classList.add('saving'); break;
+    case 'saved': el.textContent = `☁ синхр. ${t}`; el.classList.add('saved'); break;
+    case 'error': el.textContent = '☁ ошибка'; el.classList.add('error'); break;
+    default: el.textContent = '☁ —';
+  }
+}
+
+function getProgressData() {
+  return {
+    found: Array.from(journalFound),
+    hidden: Array.from(hiddenFound),
+    achievements: Array.from(unlockedAchievements),
+    timestamp: Date.now(),
+    version: 4
+  };
+}
+
+function applyProgressData(data) {
+  if (!data) return false;
+  try {
+    if (data.found) { journalFound.clear(); data.found.forEach(id => journalFound.add(id)); }
+    if (data.hidden) { hiddenFound.clear(); data.hidden.forEach(id => hiddenFound.add(id)); }
+    if (data.achievements) { unlockedAchievements.clear(); data.achievements.forEach(id => unlockedAchievements.add(id)); }
+    crewItems.forEach(item => {
+      const id = item.userData.fragId;
+      if (journalFound.has(id) || hiddenFound.has(id)) {
+        item.userData.collected = true; item.visible = false;
+      } else {
+        item.userData.collected = false; item.visible = true;
+      }
+    });
+    foundCount = journalFound.size;
+    hiddenCount = hiddenFound.size;
+    updateJournalHUD();
+    updateAchievementsHUD();
+    document.getElementById('journalEntries').innerHTML = '';
+    journalFound.forEach(id => addJournalEntry(id, false));
+    hiddenFound.forEach(id => addJournalEntry(id, false));
+    return true;
+  } catch(e) { return false; }
+}
+
+function saveLocal(data) {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); return true; } catch(e) { return false; }
+}
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+
+async function saveToVK(data) {
+  if (!vkBridgeReady) return false;
+  try {
+    syncStatus = 'saving'; updateSyncIndicator();
+    await vkBridge.send('VKWebAppStorageSet', {
+      key: VK_STORAGE_KEY, value: JSON.stringify(data)
+    });
+    syncStatus = 'saved'; lastSyncTime = Date.now(); updateSyncIndicator();
+    return true;
+  } catch(e) {
+    syncStatus = 'error'; updateSyncIndicator();
+    return false;
+  }
+}
+
+async function loadFromVK() {
+  if (!vkBridgeReady) return null;
+  try {
+    syncStatus = 'loading'; updateSyncIndicator();
+    const result = await vkBridge.send('VKWebAppStorageGet', { keys: [VK_STORAGE_KEY] });
+    syncStatus = 'idle'; updateSyncIndicator();
+    if (result && result.keys && result.keys[0] && result.keys[0].value) {
+      return JSON.parse(result.keys[0].value);
+    }
+    return null;
+  } catch(e) {
+    syncStatus = 'error'; updateSyncIndicator();
+    return null;
+  }
+}
+
+function saveProgress() {
+  const data = getProgressData();
+  saveLocal(data);
+  if (vkBridgeReady) {
+    if (syncTimeout) clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(() => {
+      saveToVK(data);
+      updateLeaderboardEntry();
+    }, 2000);
+  }
+}
+
+async function loadProgress() {
+  const localData = loadLocal();
+  const cloudData = await loadFromVK();
+  let bestData = null;
+  if (localData && cloudData) {
+    const lt = localData.timestamp || 0;
+    const ct = cloudData.timestamp || 0;
+    bestData = ct > lt ? cloudData : localData;
+  } else {
+    bestData = cloudData || localData;
+  }
+  if (bestData) {
+    applyProgressData(bestData);
+    if (bestData === cloudData && cloudData !== localData) saveLocal(cloudData);
+    if (bestData === localData && cloudData && localData.timestamp > (cloudData.timestamp || 0)) saveToVK(localData);
+    updateLeaderboardEntry();
+  }
+}
+
+async function clearProgress() {
+  try { localStorage.removeItem(SAVE_KEY); } catch(e){}
+  if (vkBridgeReady) {
+    try { await vkBridge.send('VKWebAppStorageSet', { key: VK_STORAGE_KEY, value: '' }); } catch(e){}
+  }
+  journalFound.clear();
+  hiddenFound.clear();
+  unlockedAchievements.clear();
+  foundCount = 0;
+  hiddenCount = 0;
+  updateJournalHUD();
+  updateAchievementsHUD();
+  document.getElementById('journalEntries').innerHTML = '';
+}
+
+setInterval(() => {
+  if (!vkBridgeReady) return;
+  const data = getProgressData();
+  if (data.timestamp - lastSyncTime > 30000) saveToVK(data);
+}, 30000);
+
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible' && vkBridgeReady) {
+    const cloudData = await loadFromVK();
+    if (cloudData) {
+      const localData = getProgressData();
+      if ((cloudData.timestamp || 0) > (localData.timestamp || 0) + 5000) {
+        applyProgressData(cloudData);
+        saveLocal(cloudData);
+      }
+    }
+  }
+});
+
+/* ============================================================
+   РЕЙТИНГ
+   ============================================================ */
+const LEADERBOARD_IDS_KEY = 'leaderboard_ids';
+const LEADERBOARD_PREFIX = 'leaderboard_';
+const LEADERBOARD_MAX_IDS = 100;
+
+function getMyScore() {
+  return {
+    id: myVkId || 'unknown',
+    name: myVkName || 'Неизвестный',
+    photo: myVkPhoto,
+    found: foundCount,
+    hidden: hiddenCount,
+    achievements: unlockedAchievements.size,
+    total: foundCount * 10 + hiddenCount * 25 + unlockedAchievements.size * 5,
+    timestamp: Date.now()
+  };
+}
+
+async function updateLeaderboardEntry() {
+  if (!vkBridgeReady || !myVkId) return;
+  try {
+    const score = getMyScore();
+    await vkBridge.send('VKWebAppStorageSet', {
+      key: LEADERBOARD_PREFIX + myVkId,
+      value: JSON.stringify(score)
+    });
+    await updateLeaderboardIdsList(myVkId);
+  } catch(e) {}
+}
+
+async function updateLeaderboardIdsList(myId) {
+  try {
+    const result = await vkBridge.send('VKWebAppStorageGet', { keys: [LEADERBOARD_IDS_KEY] });
+    let ids = [];
+    if (result && result.keys && result.keys[0] && result.keys[0].value) {
+      try { ids = JSON.parse(result.keys[0].value); if (!Array.isArray(ids)) ids = []; } catch(e){ ids = []; }
+    }
+    if (!ids.includes(myId)) ids.push(myId);
+    if (ids.length > LEADERBOARD_MAX_IDS) ids = ids.slice(-LEADERBOARD_MAX_IDS);
+    await vkBridge.send('VKWebAppStorageSet', {
+      key: LEADERBOARD_IDS_KEY, value: JSON.stringify(ids)
+    });
+  } catch(e) {}
+}
+
+async function loadLeaderboard() {
+  if (!vkBridgeReady) return [getMyScore()];
+  try {
+    const idsResult = await vkBridge.send('VKWebAppStorageGet', { keys: [LEADERBOARD_IDS_KEY] });
+    let ids = [];
+    if (idsResult && idsResult.keys && idsResult.keys[0] && idsResult.keys[0].value) {
+      try { ids = JSON.parse(idsResult.keys[0].value); } catch(e){ ids = []; }
+    }
+    if (myVkId && !ids.includes(myVkId)) ids.push(myVkId);
+    if (ids.length === 0) return [getMyScore()];
+
+    const scores = [];
+    const batchSize = 50;
+    for (let i = 0; i < ids.length; i += batchSize) {
+      const batch = ids.slice(i, i + batchSize);
+      const keys = batch.map(id => LEADERBOARD_PREFIX + id);
+      try {
+        const result = await vkBridge.send('VKWebAppStorageGet', { keys });
+        if (result && result.keys) {
+          result.keys.forEach(k => {
+            if (k.value) {
+              try {
+                const data = JSON.parse(k.value);
+                if (data && data.id) scores.push(data);
+              } catch(e){}
+            }
+          });
+        }
+      } catch(e) {}
+    }
+    if (myVkId && !scores.some(s => String(s.id) === String(myVkId))) scores.push(getMyScore());
+    scores.sort((a, b) => (b.total || 0) - (a.total || 0));
+    return scores;
+  } catch(e) {
+    return [getMyScore()];
+  }
+}
+
+async function renderLeaderboard() {
+  const list = document.getElementById('leaderboardList');
+  list.innerHTML = '<div style="text-align:center;padding:40px;color:#888;font-style:italic">Загрузка рейтинга...</div>';
+  const scores = await loadLeaderboard();
+  if (!scores || scores.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:#888;font-style:italic">Пока никого нет</div>';
+    return;
+  }
+  list.innerHTML = '';
+  scores.forEach((s, i) => {
+    const rank = i + 1;
+    const isMe = myVkId && String(s.id) === String(myVkId);
+    const row = document.createElement('div');
+    row.className = 'leader-row' + (isMe ? ' me' : '') +
+                    (rank === 1 ? ' top1' : rank === 2 ? ' top2' : rank === 3 ? ' top3' : '');
+    const medals = ['🥇', '🥈', '🥉'];
+    const rankDisplay = rank <= 3 ? medals[rank - 1] : `#${rank}`;
+    const avatarHTML = s.photo
+      ? `<img src="${s.photo}" alt="" onerror="this.style.display='none';this.parentNode.textContent='👤'">`
+      : '👤';
+    row.innerHTML = `
+      <div class="rank">${rankDisplay}</div>
+      <div class="avatar">${avatarHTML}</div>
+      <div class="info">
+        <div class="name">
+          ${escapeHtml(s.name || 'Неизвестный')}
+          ${isMe ? '<span class="you">ВЫ</span>' : ''}
+        </div>
+      </div>
+      <div class="score">
+        <div class="main">${s.total || 0}</div>
+        <div class="sub">${s.found || 0}/12 · ${s.hidden || 0}/3</div>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+  const note = document.createElement('div');
+  note.style.cssText = 'margin-top:16px;font-size:10px;color:#666;text-align:center;font-style:italic;line-height:1.6';
+  note.innerHTML = 'Очки: фрагмент = 10 · скрытый = 25 · достижение = 5';
+  list.appendChild(note);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function openLeaderboard() {
+  playJournalOpen();
+  document.getElementById('leaderboardModal').classList.remove('hidden');
+  renderLeaderboard();
+}
+function closeLeaderboard() { document.getElementById('leaderboardModal').classList.add('hidden'); }
+async function refreshLeaderboard() { await renderLeaderboard(); }
+
+document.getElementById('leaderboardBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  openLeaderboard();
+});
+
+/* ============================================================
+   ЗВУКИ
+   ============================================================ */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playChime(freq = 520, duration = 0.6, type = 'sine', volume = 0.15) {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type; osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(volume, now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(now); osc.stop(now + duration);
+}
+function playDeepHum() {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine'; osc.frequency.value = 80;
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.08, now + 0.3);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(now); osc.stop(now + 2.5);
+}
+function playJournalOpen() { playChime(660, 0.4, 'triangle'); }
+function playFragmentCollected() { playChime(880, 0.5, 'sine'); setTimeout(() => playChime(1320, 0.7, 'sine'), 120); }
+function playExtraFound() { playChime(440, 0.4, 'triangle'); setTimeout(() => playChime(660, 0.5, 'triangle'), 100); setTimeout(() => playChime(880, 0.8, 'triangle'), 200); }
+function playAchievement() { playChime(523, 0.3, 'triangle'); setTimeout(() => playChime(659, 0.3, 'triangle'), 150); setTimeout(() => playChime(784, 0.5, 'triangle'), 300); setTimeout(() => playChime(1047, 0.8, 'triangle'), 450); }
+function playFinale() { playDeepHum(); setTimeout(() => playChime(220, 3, 'sine'), 200); setTimeout(() => playChime(330, 3, 'sine'), 800); setTimeout(() => playChime(440, 4, 'sine'), 1600); }
+
+/* ============================================================
+   ГОЛОС — НИЗКИЙ МУЖСКОЙ С ЭФФЕКТАМИ РАЦИИ
+   ============================================================ */
+let voiceEnabled = true;
+const voiceBtn = document.getElementById('voiceBtn');
+
+let voiceAudioCtx = null;
+let radioNoiseNode = null;
+let radioNoiseGain = null;
+let radioStaticNode = null;
+let radioStaticGain = null;
+let radioStaticInterval = null;
+
+function initVoiceEffects() {
+  if (voiceAudioCtx) return;
+  voiceAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  // 1. Белый шум — «эфирный фон»
+  const noiseBuffer = voiceAudioCtx.createBuffer(1, voiceAudioCtx.sampleRate * 2, voiceAudioCtx.sampleRate);
+  const noiseData = noiseBuffer.getChannelData(0);
+  for (let i = 0; i < noiseData.length; i++) {
+    noiseData[i] = (Math.random() * 2 - 1) * 0.5;
+  }
+  radioNoiseNode = voiceAudioCtx.createBufferSource();
+  radioNoiseNode.buffer = noiseBuffer;
+  radioNoiseNode.loop = true;
+
+  const noiseFilter = voiceAudioCtx.createBiquadFilter();
+  noiseFilter.type = 'bandpass';
+  noiseFilter.frequency.value = 1800;
+  noiseFilter.Q.value = 0.6;
+
+  radioNoiseGain = voiceAudioCtx.createGain();
+  radioNoiseGain.gain.value = 0.0;
+
+  radioNoiseNode.connect(noiseFilter);
+  noiseFilter.connect(radioNoiseGain);
+  radioNoiseGain.connect(voiceAudioCtx.destination);
+  radioNoiseNode.start();
+
+  // 2. Периодические «трески» — как помехи в рации
+  radioStaticNode = voiceAudioCtx.createOscillator();
+  radioStaticNode.type = 'sawtooth';
+  radioStaticNode.frequency.value = 60;
+  radioStaticGain = voiceAudioCtx.createGain();
+  radioStaticGain.gain.value = 0.0;
+  radioStaticNode.connect(radioStaticGain);
+  radioStaticGain.connect(voiceAudioCtx.destination);
+  radioStaticNode.start();
+
+  // Периодически «трещим»
+  radioStaticInterval = setInterval(() => {
+    if (!voiceEnabled || !radioStaticGain) return;
+    if (Math.random() > 0.6 && radioNoiseGain.gain.value > 0.01) {
+      const now = voiceAudioCtx.currentTime;
+      radioStaticGain.gain.cancelScheduledValues(now);
+      radioStaticGain.gain.setValueAtTime(0.04, now);
+      radioStaticGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    }
+  }, 400);
+}
+
+function setVoiceEffectsActive(active) {
+  if (!radioNoiseGain || !voiceAudioCtx) return;
+  const now = voiceAudioCtx.currentTime;
+  radioNoiseGain.gain.cancelScheduledValues(now);
+  radioNoiseGain.gain.linearRampToValueAtTime(active ? 0.025 : 0.0, now + 0.3);
+}
+
+function speak(text) {
+  if (!voiceEnabled || !('speechSynthesis' in window)) return;
+
+  if (!voiceAudioCtx) initVoiceEffects();
+  if (voiceAudioCtx.state === 'suspended') voiceAudioCtx.resume();
+
+  window.speechSynthesis.cancel();
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'ru-RU';
+  // КЛЮЧЕВЫЕ ПАРАМЕТРЫ ДЛЯ НИЗКОГО МУЖСКОГО ГОЛОСА:
+  utter.rate = 0.78;    // медленнее — оператор центра управления
+  utter.pitch = 0.35;   // максимально низкий
+  utter.volume = 0.9;
+
+  const voices = window.speechSynthesis.getVoices();
+  const ruVoices = voices.filter(v => v.lang.startsWith('ru'));
+  const maleRuVoice = ruVoices.find(v =>
+    /male|муж|yuri|dmitri|pavel|aleksandr|maxim/i.test(v.name)
+  ) || ruVoices[0];
+  if (maleRuVoice) {
+    utter.voice = maleRuVoice;
+    console.log('[Voice] Используем:', maleRuVoice.name);
+  }
+
+  utter.onstart = () => { setVoiceEffectsActive(true); };
+  utter.onend = () => { setTimeout(() => setVoiceEffectsActive(false), 500); };
+  utter.onerror = () => { setVoiceEffectsActive(false); };
+
+  window.speechSynthesis.speak(utter);
+}
+
+voiceBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  voiceEnabled = !voiceEnabled;
+  voiceBtn.textContent = voiceEnabled ? '🔊 Голос: вкл' : '🔇 Голос: выкл';
+  if (!voiceEnabled) {
+    window.speechSynthesis.cancel();
+    setVoiceEffectsActive(false);
+  }
+});
+
+addEventListener('keydown', e => {
+  if (e.code === 'KeyV') {
+    voiceEnabled = !voiceEnabled;
+    voiceBtn.textContent = voiceEnabled ? '🔊 Голос: вкл' : '🔇 Голос: выкл';
+    if (!voiceEnabled) {
+      window.speechSynthesis.cancel();
+      setVoiceEffectsActive(false);
+    }
+  }
+});
+
+/* ============================================================
+   МИР
+   ============================================================ */
 const WORLD_SIZE = 21166;
 const WORLD_HALF = WORLD_SIZE / 2;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
-
 const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.5, 80000);
 camera.position.set(0, 2, 0);
-
 const renderer = new THREE.WebGLRenderer({antialias: !isMobile, powerPreference: 'high-performance', alpha: false});
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-// ===== ТЕНИ ОТКЛЮЧЕНЫ — они давали линии по граням =====
 renderer.shadowMap.enabled = false;
 document.body.appendChild(renderer.domElement);
-
 document.addEventListener('gesturestart', e => e.preventDefault());
 document.addEventListener('gesturechange', e => e.preventDefault());
 document.addEventListener('gestureend', e => e.preventDefault());
 
-/* ===== МУЗЫКА ===== */
 const radio = document.getElementById('radio');
 const musicBtn = document.getElementById('music');
 let musicPlaying = false;
 musicBtn.addEventListener('click', (e) => {
   e.stopPropagation();
-  if (musicPlaying) {
-    radio.pause();
-    musicBtn.classList.remove('playing');
-    musicPlaying = false;
-  } else {
-    radio.play().then(() => {
-      musicBtn.classList.add('playing');
-      musicPlaying = true;
-    }).catch(()=>{});
-  }
+  if (musicPlaying) { radio.pause(); musicBtn.classList.remove('playing'); musicPlaying = false; }
+  else { radio.play().then(() => { musicBtn.classList.add('playing'); musicPlaying = true; }).catch(()=>{}); }
 });
 
-/* ===== 8 РЕГИОНОВ ===== */
 const REGIONS = [
-  { id: 0, name: 'Южное нагорье',       color: '#b0b0b0' },
-  { id: 1, name: 'Моря',                 color: '#7a7a90' },
-  { id: 2, name: 'Равнины',              color: '#a8b0a8' },
-  { id: 3, name: 'Древние кратеры',     color: '#a0a0a0' },
-  { id: 4, name: 'Молодые ударные',     color: '#d8d8d8' },
+  { id: 0, name: 'Южное нагорье', color: '#b0b0b0' },
+  { id: 1, name: 'Моря', color: '#7a7a90' },
+  { id: 2, name: 'Равнины', color: '#a8b0a8' },
+  { id: 3, name: 'Древние кратеры', color: '#a0a0a0' },
+  { id: 4, name: 'Молодые ударные', color: '#d8d8d8' },
   { id: 5, name: 'Вулканические купола', color: '#c0b8a8' },
   { id: 6, name: 'Тектонические разломы', color: '#909090' },
-  { id: 7, name: 'Смешанный регион',    color: '#b8b8b8' }
+  { id: 7, name: 'Смешанный регион', color: '#b8b8b8' }
 ];
 const REGION_COUNT = REGIONS.length;
-
 function regionAt(x) {
   const t = ((x + WORLD_HALF) % WORLD_SIZE + WORLD_SIZE) % WORLD_SIZE / WORLD_SIZE;
   return Math.min(REGION_COUNT - 1, Math.floor(t * REGION_COUNT));
 }
 
-/* ===== ТИПЫ КРАТЕРОВ ===== */
 const CRATER_TYPES = {
   simple:       { depthRatio: 0.40, rimHeight: 0.18, floorFlat: 0.0,  centralPeak: 0.0,  terraceAmp: 0.0,  rimWidth: 0.28 },
   simpleMedium: { depthRatio: 0.34, rimHeight: 0.22, floorFlat: 0.05, centralPeak: 0.0,  terraceAmp: 0.02, rimWidth: 0.30 },
   complex:      { depthRatio: 0.20, rimHeight: 0.20, floorFlat: 0.25, centralPeak: 0.28, terraceAmp: 0.10, rimWidth: 0.30 },
   basin:        { depthRatio: 0.10, rimHeight: 0.15, floorFlat: 0.45, centralPeak: 0.15, terraceAmp: 0.12, rimWidth: 0.35 }
 };
-
-const craters = [];
-const domes = [];
-const faults = [];
+const craters = [], domes = [], faults = [];
 
 function typeForRadius(r) {
   if (r < 50) return 'simple';
@@ -178,25 +966,12 @@ function typeForRadius(r) {
   if (r < 800) return 'complex';
   return 'basin';
 }
-
 function addCrater(x, z, r, regionId) {
-  const type = typeForRadius(r);
-  const profile = CRATER_TYPES[type];
+  const type = typeForRadius(r), profile = CRATER_TYPES[type];
   let d = r * profile.depthRatio * 2;
-  if (type === 'simpleMedium') {
-    const boost = 1.6 + Math.random() * 0.3;
-    d *= boost;
-  }
-  craters.push({
-    x, z, r, d, type, profile, regionId,
-    rimHeight: profile.rimHeight,
-    floorFlat: profile.floorFlat,
-    centralPeak: profile.centralPeak,
-    terraceAmp: profile.terraceAmp,
-    rimWidth: profile.rimWidth
-  });
+  if (type === 'simpleMedium') d *= 1.6 + Math.random() * 0.3;
+  craters.push({ x, z, r, d, type, profile, regionId, rimHeight: profile.rimHeight, floorFlat: profile.floorFlat, centralPeak: profile.centralPeak, terraceAmp: profile.terraceAmp, rimWidth: profile.rimWidth });
 }
-
 function addDome(x, z, r, height) { domes.push({ x, z, r, height }); }
 function addFault(x, z, length, angle, height, width) { faults.push({ x, z, length, angle, height, width }); }
 
@@ -204,117 +979,39 @@ function generateCraters() {
   const counts = isMobile
     ? { highland: 1500, sea: 15, plain: 8, ancient: 150, young: 250, mixed: 400 }
     : { highland: 3800, sea: 35, plain: 15, ancient: 400, young: 750, mixed: 1200 };
-
   const segW = WORLD_SIZE / REGION_COUNT;
-
-  for (let i = 0; i < counts.highland; i++) {
-    const x = -WORLD_HALF + segW * Math.random();
-    const z = (Math.random()-.5) * WORLD_SIZE;
-    addCrater(x, z, 100 + Math.random() * 400, 0);
-  }
-  for (let i = 0; i < (isMobile?8:20); i++) {
-    const x = -WORLD_HALF + segW * Math.random();
-    const z = (Math.random()-.5) * WORLD_SIZE;
-    addCrater(x, z, 500 + Math.random() * 1500, 0);
-  }
-
-  for (let i = 0; i < counts.sea; i++) {
-    const x = -WORLD_HALF + segW * (1 + Math.random());
-    const z = (Math.random()-.5) * WORLD_SIZE;
-    addCrater(x, z, 120 + Math.random() * 150, 1);
-  }
-  for (let i = 0; i < (isMobile?1:3); i++) {
-    const x = -WORLD_HALF + segW * (1 + Math.random());
-    const z = (Math.random()-.5) * WORLD_SIZE;
-    addCrater(x, z, 800 + Math.random() * 1500, 1);
-  }
-
-  for (let i = 0; i < counts.plain; i++) {
-    const x = -WORLD_HALF + segW * (2 + Math.random());
-    const z = (Math.random()-.5) * WORLD_SIZE;
-    addCrater(x, z, 150 + Math.random() * 300, 2);
-  }
-
-  for (let i = 0; i < counts.ancient; i++) {
-    const x = -WORLD_HALF + segW * (3 + Math.random());
-    const z = (Math.random()-.5) * WORLD_SIZE;
-    addCrater(x, z, 200 + Math.random() * 700, 3);
-  }
-  for (let i = 0; i < (isMobile?5:12); i++) {
-    const x = -WORLD_HALF + segW * (3 + Math.random());
-    const z = (Math.random()-.5) * WORLD_SIZE;
-    addCrater(x, z, 1000 + Math.random() * 2000, 3);
-  }
-
-  for (let i = 0; i < counts.young; i++) {
-    const x = -WORLD_HALF + segW * (4 + Math.random());
-    const z = (Math.random()-.5) * WORLD_SIZE;
-    addCrater(x, z, 150 + Math.random() * 350, 4);
-  }
-  for (let i = 0; i < (isMobile?4:10); i++) {
-    const x = -WORLD_HALF + segW * (4 + Math.random());
-    const z = (Math.random()-.5) * WORLD_SIZE;
-    addCrater(x, z, 600 + Math.random() * 1500, 4);
-  }
-
-  const domeCount = isMobile ? 20 : 60;
-  for (let i = 0; i < domeCount; i++) {
-    const x = -WORLD_HALF + segW * (5 + Math.random());
-    const z = (Math.random()-.5) * WORLD_SIZE;
-    addDome(x, z, 100 + Math.random() * 400, 30 + Math.random() * 100);
-  }
-  for (let i = 0; i < (isMobile?80:200); i++) {
-    const x = -WORLD_HALF + segW * (5 + Math.random());
-    const z = (Math.random()-.5) * WORLD_SIZE;
-    addCrater(x, z, 100 + Math.random() * 150, 5);
-  }
-
-  const faultCount = isMobile ? 15 : 40;
-  for (let i = 0; i < faultCount; i++) {
-    const x = -WORLD_HALF + segW * (6 + Math.random());
-    const z = (Math.random()-.5) * WORLD_SIZE;
-    addFault(x, z, 300 + Math.random() * 1200, Math.random() * Math.PI, 20 + Math.random() * 60, 60 + Math.random() * 100);
-  }
-  for (let i = 0; i < (isMobile?60:180); i++) {
-    const x = -WORLD_HALF + segW * (6 + Math.random());
-    const z = (Math.random()-.5) * WORLD_SIZE;
-    addCrater(x, z, 100 + Math.random() * 180, 6);
-  }
-
-  for (let i = 0; i < counts.mixed; i++) {
-    const x = -WORLD_HALF + segW * (7 + Math.random());
-    const z = (Math.random()-.5) * WORLD_SIZE;
-    addCrater(x, z, 100 + Math.random() * 250, 7);
-  }
-  for (let i = 0; i < (isMobile?3:8); i++) {
-    const x = -WORLD_HALF + segW * (7 + Math.random());
-    const z = (Math.random()-.5) * WORLD_SIZE;
-    addCrater(x, z, 500 + Math.random() * 1000, 7);
-  }
+  for (let i = 0; i < counts.highland; i++) addCrater(-WORLD_HALF + segW * Math.random(), (Math.random()-.5)*WORLD_SIZE, 100 + Math.random() * 400, 0);
+  for (let i = 0; i < (isMobile?8:20); i++) addCrater(-WORLD_HALF + segW * Math.random(), (Math.random()-.5)*WORLD_SIZE, 500 + Math.random() * 1500, 0);
+  for (let i = 0; i < counts.sea; i++) addCrater(-WORLD_HALF + segW * (1 + Math.random()), (Math.random()-.5)*WORLD_SIZE, 120 + Math.random() * 150, 1);
+  for (let i = 0; i < (isMobile?1:3); i++) addCrater(-WORLD_HALF + segW * (1 + Math.random()), (Math.random()-.5)*WORLD_SIZE, 800 + Math.random() * 1500, 1);
+  for (let i = 0; i < counts.plain; i++) addCrater(-WORLD_HALF + segW * (2 + Math.random()), (Math.random()-.5)*WORLD_SIZE, 150 + Math.random() * 300, 2);
+  for (let i = 0; i < counts.ancient; i++) addCrater(-WORLD_HALF + segW * (3 + Math.random()), (Math.random()-.5)*WORLD_SIZE, 200 + Math.random() * 700, 3);
+  for (let i = 0; i < (isMobile?5:12); i++) addCrater(-WORLD_HALF + segW * (3 + Math.random()), (Math.random()-.5)*WORLD_SIZE, 1000 + Math.random() * 2000, 3);
+  for (let i = 0; i < counts.young; i++) addCrater(-WORLD_HALF + segW * (4 + Math.random()), (Math.random()-.5)*WORLD_SIZE, 150 + Math.random() * 350, 4);
+  for (let i = 0; i < (isMobile?4:10); i++) addCrater(-WORLD_HALF + segW * (4 + Math.random()), (Math.random()-.5)*WORLD_SIZE, 600 + Math.random() * 1500, 4);
+  for (let i = 0; i < (isMobile?20:60); i++) addDome(-WORLD_HALF + segW * (5 + Math.random()), (Math.random()-.5)*WORLD_SIZE, 100 + Math.random() * 400, 30 + Math.random() * 100);
+  for (let i = 0; i < (isMobile?80:200); i++) addCrater(-WORLD_HALF + segW * (5 + Math.random()), (Math.random()-.5)*WORLD_SIZE, 100 + Math.random() * 150, 5);
+  for (let i = 0; i < (isMobile?15:40); i++) addFault(-WORLD_HALF + segW * (6 + Math.random()), (Math.random()-.5)*WORLD_SIZE, 300 + Math.random() * 1200, Math.random() * Math.PI, 20 + Math.random() * 60, 60 + Math.random() * 100);
+  for (let i = 0; i < (isMobile?60:180); i++) addCrater(-WORLD_HALF + segW * (6 + Math.random()), (Math.random()-.5)*WORLD_SIZE, 100 + Math.random() * 180, 6);
+  for (let i = 0; i < counts.mixed; i++) addCrater(-WORLD_HALF + segW * (7 + Math.random()), (Math.random()-.5)*WORLD_SIZE, 100 + Math.random() * 250, 7);
+  for (let i = 0; i < (isMobile?3:8); i++) addCrater(-WORLD_HALF + segW * (7 + Math.random()), (Math.random()-.5)*WORLD_SIZE, 500 + Math.random() * 1000, 7);
 }
-
-console.log('Генерация кратеров...');
 generateCraters();
-console.log(`Кратеров: ${craters.length}, куполов: ${domes.length}, разломов: ${faults.length}`);
 
-/* ===== SPATIAL HASH ===== */
 const CELL_SIZE = 400;
 let gridCols = 0, gridRows = 0, grid = null;
-
 function buildGrid() {
   gridCols = Math.ceil(WORLD_SIZE / CELL_SIZE);
   gridRows = Math.ceil(WORLD_SIZE / CELL_SIZE);
   grid = new Array(gridCols * gridRows);
   for (let i = 0; i < grid.length; i++) grid[i] = [];
-
   for (let i = 0; i < craters.length; i++) {
     const c = craters[i];
     const totalR = c.r * (1 + c.rimWidth + 0.2);
-    let minCol = Math.floor((c.x - totalR + WORLD_HALF) / CELL_SIZE);
-    let maxCol = Math.floor((c.x + totalR + WORLD_HALF) / CELL_SIZE);
-    let minRow = Math.floor((c.z - totalR + WORLD_HALF) / CELL_SIZE);
-    let maxRow = Math.floor((c.z + totalR + WORLD_HALF) / CELL_SIZE);
-
+    const minCol = Math.floor((c.x - totalR + WORLD_HALF) / CELL_SIZE);
+    const maxCol = Math.floor((c.x + totalR + WORLD_HALF) / CELL_SIZE);
+    const minRow = Math.floor((c.z - totalR + WORLD_HALF) / CELL_SIZE);
+    const maxRow = Math.floor((c.z + totalR + WORLD_HALF) / CELL_SIZE);
     for (let col = minCol; col <= maxCol; col++) {
       for (let row = minRow; row <= maxRow; row++) {
         const wc = ((col % gridCols) + gridCols) % gridCols;
@@ -326,101 +1023,65 @@ function buildGrid() {
 }
 buildGrid();
 
-function smoothstep(a, b, x) {
-  const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
-  return t * t * (3 - 2 * t);
-}
-
+function smoothstep(a, b, x) { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
 const K = 2 * Math.PI / WORLD_SIZE;
-
 function softNoise(x, z) {
-  return Math.sin(x*K*1)*Math.cos(z*K*1)*12 +
-         Math.sin(x*K*3+1.3)*Math.cos(z*K*3+2.1)*4 +
-         Math.sin(x*K*7+0.7)*Math.cos(z*K*7+1.5)*1.2;
+  return Math.sin(x*K*1)*Math.cos(z*K*1)*12 + Math.sin(x*K*3+1.3)*Math.cos(z*K*3+2.1)*4 + Math.sin(x*K*7+0.7)*Math.cos(z*K*7+1.5)*1.2;
 }
-
 function wrappedDelta(d) {
   if (d > WORLD_HALF) d -= WORLD_SIZE;
   else if (d < -WORLD_HALF) d += WORLD_SIZE;
   return d;
 }
-
 function craterHeight(c, dx, dz) {
-  const d = Math.sqrt(dx*dx + dz*dz);
-  const t = d / c.r;
+  const d = Math.sqrt(dx*dx + dz*dz), t = d / c.r;
   if (t >= 1 + c.rimWidth + 0.2) return 0;
-
   let h = 0;
-  if (t < c.floorFlat) {
-    h -= c.d;
-  } else if (t < 1) {
+  if (t < c.floorFlat) h -= c.d;
+  else if (t < 1) {
     const tNorm = (t - c.floorFlat) / (1 - c.floorFlat);
     const smooth = smoothstep(0, 1, tNorm);
-    const smoothSq = smooth * smooth;
-    h -= c.d * (1 - smoothSq * (3 - 2 * smooth));
+    h -= c.d * (1 - smooth * smooth * (3 - 2 * smooth));
   }
-  if (c.centralPeak > 0 && t < 0.35) {
-    const pf = 1 - smoothstep(0, 0.35, t);
-    h += c.d * c.centralPeak * pf * pf;
-  }
+  if (c.centralPeak > 0 && t < 0.35) { const pf = 1 - smoothstep(0, 0.35, t); h += c.d * c.centralPeak * pf * pf; }
   if (c.terraceAmp > 0 && t > 0.3 && t < 0.95) {
     const zone = smoothstep(0.3, 0.4, t) * (1 - smoothstep(0.85, 0.95, t));
-    const w = Math.sin(t * 3 * Math.PI * 2 + c.x * 0.001) * 0.5 + 0.5;
-    h += c.d * c.terraceAmp * zone * (w - 0.5);
+    h += c.d * c.terraceAmp * zone * (Math.sin(t * 3 * Math.PI * 2 + c.x * 0.001) * 0.5 + 0.5 - 0.5);
   }
   if (t > 0.95 && t < 1 + c.rimWidth) {
     const rt = (t - 1) / c.rimWidth;
-    const rf = smoothstep(-0.2, 0.3, rt) * (1 - smoothstep(0.6, 1.1, rt));
-    h += c.d * c.rimHeight * rf;
+    h += c.d * c.rimHeight * (smoothstep(-0.2, 0.3, rt) * (1 - smoothstep(0.6, 1.1, rt)));
   }
   return h;
 }
-
 function domeHeight(dm, dx, dz) {
-  const d = Math.sqrt(dx*dx + dz*dz);
-  const t = d / dm.r;
+  const d = Math.sqrt(dx*dx + dz*dz), t = d / dm.r;
   if (t >= 1) return 0;
   return dm.height * 0.5 * (1 + Math.cos(t * Math.PI));
 }
-
 function faultHeight(f, dx, dz) {
-  const cos = Math.cos(f.angle);
-  const sin = Math.sin(f.angle);
-  const along = dx * cos + dz * sin;
-  const perp = -dx * sin + dz * cos;
+  const cos = Math.cos(f.angle), sin = Math.sin(f.angle);
+  const along = dx * cos + dz * sin, perp = -dx * sin + dz * cos;
   if (Math.abs(along) > f.length / 2) return 0;
-  const perpT = Math.abs(perp) / f.width;
-  if (perpT >= 1.5) return 0;
-  const s = smoothstep(-1.5, 1.5, perp / f.width);
-  return f.height * (s - 0.5);
+  if (Math.abs(perp) / f.width >= 1.5) return 0;
+  return f.height * (smoothstep(-1.5, 1.5, perp / f.width) - 0.5);
 }
-
 function computeGroundH(x, z) {
   let h = softNoise(x, z);
-  const col = Math.floor((x + WORLD_HALF) / CELL_SIZE);
-  const row = Math.floor((z + WORLD_HALF) / CELL_SIZE);
-  const wc = ((col % gridCols) + gridCols) % gridCols;
-  const wr = ((row % gridRows) + gridRows) % gridRows;
+  const col = Math.floor((x + WORLD_HALF) / CELL_SIZE), row = Math.floor((z + WORLD_HALF) / CELL_SIZE);
+  const wc = ((col % gridCols) + gridCols) % gridCols, wr = ((row % gridRows) + gridRows) % gridRows;
   const bucket = grid[wc * gridRows + wr];
-  if (bucket) {
-    for (let i = 0; i < bucket.length; i++) {
-      const c = bucket[i];
-      const dx = wrappedDelta(x - c.x);
-      const dz = wrappedDelta(z - c.z);
-      h += craterHeight(c, dx, dz);
-    }
+  if (bucket) for (let i = 0; i < bucket.length; i++) {
+    const c = bucket[i];
+    h += craterHeight(c, wrappedDelta(x - c.x), wrappedDelta(z - c.z));
   }
   for (let i = 0; i < domes.length; i++) {
-    const dm = domes[i];
-    const dx = wrappedDelta(x - dm.x);
-    const dz = wrappedDelta(z - dm.z);
+    const dm = domes[i], dx = wrappedDelta(x - dm.x), dz = wrappedDelta(z - dm.z);
     if (Math.abs(dx) > dm.r || Math.abs(dz) > dm.r) continue;
     h += domeHeight(dm, dx, dz);
   }
   for (let i = 0; i < faults.length; i++) {
-    const f = faults[i];
-    const dx = wrappedDelta(x - f.x);
-    const dz = wrappedDelta(z - f.z);
+    const f = faults[i], dx = wrappedDelta(x - f.x), dz = wrappedDelta(z - f.z);
     const md = f.length / 2 + f.width;
     if (Math.abs(dx) > md || Math.abs(dz) > md) continue;
     h += faultHeight(f, dx, dz);
@@ -428,268 +1089,774 @@ function computeGroundH(x, z) {
   return h;
 }
 
-/* ============================================================
-   МАТЕРИАЛ БЕЗ ТЕКСТУРЫ — однотонный серый, без сетки
-   ============================================================ */
 const terrainRes = isMobile ? 450 : 900;
 const vertsPerRow = terrainRes + 1;
 const heightMap = new Float32Array(vertsPerRow * vertsPerRow);
-
 const terrainGeo = new THREE.PlaneGeometry(WORLD_SIZE, WORLD_SIZE, terrainRes, terrainRes);
 terrainGeo.rotateX(-Math.PI/2);
 const v = terrainGeo.attributes.position;
-
 for (let i = 0; i < v.count; i++) {
-  const x = v.getX(i);
-  const z = v.getZ(i);
+  const x = v.getX(i), z = v.getZ(i);
   const y = computeGroundH(x, z);
-  v.setY(i, y);
-  heightMap[i] = y;
+  v.setY(i, y); heightMap[i] = y;
 }
-
-// Проход сглаживания
 function smoothHeightMap() {
   const temp = new Float32Array(heightMap.length);
-  const N = vertsPerRow;
-  const last = N - 1;
-  for (let i = 0; i < N; i++) {
-    for (let j = 0; j < N; j++) {
-      const idx = i * N + j;
-      const iUp = i > 0 ? i - 1 : last;
-      const iDown = i < last ? i + 1 : 0;
-      const jLeft = j > 0 ? j - 1 : last;
-      const jRight = j < last ? j + 1 : 0;
-      let sum = heightMap[idx], cnt = 1;
-      sum += heightMap[i * N + jLeft]; cnt++;
-      sum += heightMap[i * N + jRight]; cnt++;
-      sum += heightMap[iUp * N + j]; cnt++;
-      sum += heightMap[iDown * N + j]; cnt++;
-      sum += heightMap[iUp * N + jLeft]; cnt++;
-      sum += heightMap[iUp * N + jRight]; cnt++;
-      sum += heightMap[iDown * N + jLeft]; cnt++;
-      sum += heightMap[iDown * N + jRight]; cnt++;
-      temp[idx] = sum / cnt;
-    }
+  const N = vertsPerRow, last = N - 1;
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+    const idx = i * N + j;
+    const iUp = i > 0 ? i - 1 : last, iDown = i < last ? i + 1 : 0;
+    const jLeft = j > 0 ? j - 1 : last, jRight = j < last ? j + 1 : 0;
+    let sum = heightMap[idx], cnt = 1;
+    sum += heightMap[i * N + jLeft]; cnt++;
+    sum += heightMap[i * N + jRight]; cnt++;
+    sum += heightMap[iUp * N + j]; cnt++;
+    sum += heightMap[iDown * N + j]; cnt++;
+    sum += heightMap[iUp * N + jLeft]; cnt++;
+    sum += heightMap[iUp * N + jRight]; cnt++;
+    sum += heightMap[iDown * N + jLeft]; cnt++;
+    sum += heightMap[iDown * N + jRight]; cnt++;
+    temp[idx] = sum / cnt;
   }
   heightMap.set(temp);
 }
 smoothHeightMap();
-
 for (let i = 0; i < v.count; i++) v.setY(i, heightMap[i]);
 terrainGeo.computeVertexNormals();
 
-// Материал без текстуры — однотонный серый с лёгким отражением
-const terrainMat = new THREE.MeshStandardMaterial({
-  color: 0xb0b0b0,
-  roughness: 0.95,
-  metalness: 0.02,
-  flatShading: false
-});
-
-/* ============================================================
-   ОБЪЕДИНЕНИЕ 9 КОПИЙ + ПЕРЕСЧЁТ НОРМАЛЕЙ
-   ============================================================ */
+const terrainMat = new THREE.MeshStandardMaterial({ color: 0xb0b0b0, roughness: 0.95, metalness: 0.02 });
 const mergedGeometries = [];
 for (let dx = -1; dx <= 1; dx++) {
   for (let dz = -1; dz <= 1; dz++) {
-    if (dx === 0 && dz === 0) {
-      mergedGeometries.push(terrainGeo);
-    } else {
-      const geo = terrainGeo.clone();
-      geo.translate(dx * WORLD_SIZE, 0, dz * WORLD_SIZE);
-      mergedGeometries.push(geo);
-    }
+    if (dx === 0 && dz === 0) mergedGeometries.push(terrainGeo);
+    else { const geo = terrainGeo.clone(); geo.translate(dx * WORLD_SIZE, 0, dz * WORLD_SIZE); mergedGeometries.push(geo); }
   }
 }
-
 const mergedGeo = THREE.BufferGeometryUtils.mergeBufferGeometries(mergedGeometries, false);
-for (let i = 0; i < mergedGeometries.length; i++) {
-  if (mergedGeometries[i] !== terrainGeo) mergedGeometries[i].dispose();
-}
+for (let i = 0; i < mergedGeometries.length; i++) if (mergedGeometries[i] !== terrainGeo) mergedGeometries[i].dispose();
 mergedGeo.computeVertexNormals();
-
 const terrain = new THREE.Mesh(mergedGeo, terrainMat);
 terrain.frustumCulled = false;
 scene.add(terrain);
 
-/* ===== КОЛЛИЗИЯ ===== */
-const CELL_X = WORLD_SIZE / terrainRes;
-const CELL_Z = WORLD_SIZE / terrainRes;
-
+const CELL_X = WORLD_SIZE / terrainRes, CELL_Z = WORLD_SIZE / terrainRes;
 function sampleHeight(x, z) {
-  x = wrappedDelta(x);
-  z = wrappedDelta(z);
-
-  const fx = (x + WORLD_HALF) / CELL_X;
-  const fz = (z + WORLD_HALF) / CELL_Z;
-
-  const x0 = Math.floor(fx);
-  const z0 = Math.floor(fz);
-  const tx = fx - x0;
-  const tz = fz - z0;
-
-  const x1 = (x0 + 1) % vertsPerRow;
-  const z1 = (z0 + 1) % vertsPerRow;
+  x = wrappedDelta(x); z = wrappedDelta(z);
+  const fx = (x + WORLD_HALF) / CELL_X, fz = (z + WORLD_HALF) / CELL_Z;
+  const x0 = Math.floor(fx), z0 = Math.floor(fz);
+  const tx = fx - x0, tz = fz - z0;
+  const x1 = (x0 + 1) % vertsPerRow, z1 = (z0 + 1) % vertsPerRow;
   const x0w = ((x0 % vertsPerRow) + vertsPerRow) % vertsPerRow;
   const z0w = ((z0 % vertsPerRow) + vertsPerRow) % vertsPerRow;
-
-  const i00 = z0w * vertsPerRow + x0w;
-  const i10 = z0w * vertsPerRow + x1;
-  const i01 = z1 * vertsPerRow + x0w;
-  const i11 = z1 * vertsPerRow + x1;
-
-  const h00 = heightMap[i00];
-  const h10 = heightMap[i10];
-  const h01 = heightMap[i01];
-  const h11 = heightMap[i11];
-
-  const a = h00 * (1 - tx) + h10 * tx;
-  const b = h01 * (1 - tx) + h11 * tx;
-  return a * (1 - tz) + b * tz;
+  const h00 = heightMap[z0w * vertsPerRow + x0w], h10 = heightMap[z0w * vertsPerRow + x1];
+  const h01 = heightMap[z1 * vertsPerRow + x0w], h11 = heightMap[z1 * vertsPerRow + x1];
+  return (h00 * (1 - tx) + h10 * tx) * (1 - tz) + (h01 * (1 - tx) + h11 * tx) * tz;
 }
 
 /* ===== ЗВЁЗДЫ ===== */
 function createStarTex(sizePx) {
-  const c = document.createElement('canvas');
-  c.width = c.height = sizePx;
+  const c = document.createElement('canvas'); c.width = c.height = sizePx;
   const ctx = c.getContext('2d');
   const g = ctx.createRadialGradient(sizePx/2, sizePx/2, 0, sizePx/2, sizePx/2, sizePx/2);
-  g.addColorStop(0, 'rgba(255,255,255,1)');
-  g.addColorStop(0.15, 'rgba(255,255,255,0.95)');
-  g.addColorStop(0.4, 'rgba(255,255,255,0.55)');
-  g.addColorStop(0.7, 'rgba(255,255,255,0.18)');
-  g.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, sizePx, sizePx);
+  g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.15, 'rgba(255,255,255,0.95)');
+  g.addColorStop(0.4, 'rgba(255,255,255,0.55)'); g.addColorStop(0.7, 'rgba(255,255,255,0.18)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, sizePx, sizePx);
   return new THREE.CanvasTexture(c);
 }
-
 const starTexList = [];
 for (let i = 0; i < 10; i++) starTexList.push(createStarTex(32 + i*4));
-
 function raDecToXYZ(ra_h, dec_deg, radius) {
-  const ra = ra_h * 15 * Math.PI / 180;
-  const dec = dec_deg * Math.PI / 180;
-  return [
-    radius * Math.cos(dec) * Math.cos(ra),
-    radius * Math.sin(dec),
-    -radius * Math.cos(dec) * Math.sin(ra)
-  ];
+  const ra = ra_h * 15 * Math.PI / 180, dec = dec_deg * Math.PI / 180;
+  return [radius * Math.cos(dec) * Math.cos(ra), radius * Math.sin(dec), -radius * Math.cos(dec) * Math.sin(ra)];
 }
-
 function makeStarLayer(stars, sizePx, opacity, texIndex, brightMult) {
-  const geo = new THREE.BufferGeometry();
-  const pos = [], col = [];
-  stars.forEach(([ra, dec]) => {
-    const [x, y, z] = raDecToXYZ(ra, dec, 35000);
-    pos.push(x, y, z);
-    col.push(brightMult, brightMult, brightMult);
-  });
+  const geo = new THREE.BufferGeometry(); const pos = [], col = [];
+  stars.forEach(([ra, dec]) => { const [x,y,z] = raDecToXYZ(ra, dec, 35000); pos.push(x,y,z); col.push(brightMult,brightMult,brightMult); });
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-  return new THREE.Points(geo, new THREE.PointsMaterial({
-    size: sizePx, sizeAttenuation: false, vertexColors: true,
-    map: starTexList[texIndex], transparent: true, opacity,
-    alphaTest: 0.01, blending: THREE.AdditiveBlending, depthWrite: false
-  }));
+  return new THREE.Points(geo, new THREE.PointsMaterial({size: sizePx, sizeAttenuation: false, vertexColors: true, map: starTexList[texIndex], transparent: true, opacity, alphaTest: 0.01, blending: THREE.AdditiveBlending, depthWrite: false}));
 }
-
 for (let layer = 0; layer < 8; layer++) {
   const count = isMobile ? 200 + layer*100 : 600 + layer*300;
   const stars = [];
-  for (let i = 0; i < count; i++) {
-    stars.push([Math.random()*24, Math.acos(2*Math.random()-1)*180/Math.PI-90]);
-  }
+  for (let i = 0; i < count; i++) stars.push([Math.random()*24, Math.acos(2*Math.random()-1)*180/Math.PI-90]);
   scene.add(makeStarLayer(stars, (2 + layer*1.2)/16, 0.9 - layer*0.05, layer, 5.0));
 }
-
-const faintCount = isMobile ? 10000 : 30000;
 const faintStars = [];
-for (let i = 0; i < faintCount; i++) {
-  faintStars.push([Math.random()*24, Math.acos(2*Math.random()-1)*180/Math.PI-90]);
-}
+for (let i = 0; i < (isMobile?10000:30000); i++) faintStars.push([Math.random()*24, Math.acos(2*Math.random()-1)*180/Math.PI-90]);
 scene.add(makeStarLayer(faintStars, 1.2/16, 0.5, 0, 5.0));
 
-/* ===== ЗЕМЛЯ ===== */
+/* ===== ЗЕМЛЯ И СОЛНЦЕ ===== */
 const earthTexLoader = new THREE.TextureLoader();
 earthTexLoader.setCrossOrigin('anonymous');
-
 const earthGroup = new THREE.Group();
 earthGroup.position.set(1200, 1400, -3500);
 scene.add(earthGroup);
-
-const earthMat = new THREE.MeshStandardMaterial({
-  color: 0xffffff,
-  roughness: 0.9,
-  metalness: 0.0,
-  emissive: 0x0a1a33,
-  emissiveIntensity: 0.15
-});
-
-const earth = new THREE.Mesh(
-  new THREE.SphereGeometry(700, isMobile ? 64 : 128, isMobile ? 48 : 96),
-  earthMat
-);
+const earthMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, metalness: 0, emissive: 0x0a1a33, emissiveIntensity: 0.15 });
+const earth = new THREE.Mesh(new THREE.SphereGeometry(700, isMobile?64:128, isMobile?48:96), earthMat);
 earthGroup.add(earth);
-
 earthTexLoader.load('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg', (tex) => {
   tex.anisotropy = isMobile ? 4 : 16;
-  tex.wrapS = THREE.RepeatWrapping;
-  tex.wrapT = THREE.ClampToEdgeWrapping;
-  earthMat.map = tex;
-  earthMat.needsUpdate = true;
+  tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.ClampToEdgeWrapping;
+  earthMat.map = tex; earthMat.needsUpdate = true;
 });
+earthGroup.add(new THREE.Mesh(new THREE.SphereGeometry(725, isMobile?32:64, isMobile?32:64), new THREE.MeshBasicMaterial({color:0x66aaff,transparent:true,opacity:0.15,side:THREE.BackSide,blending:THREE.AdditiveBlending,depthWrite:false})));
 
-const atmo = new THREE.Mesh(
-  new THREE.SphereGeometry(725, isMobile ? 32 : 64, isMobile ? 32 : 64),
-  new THREE.MeshBasicMaterial({
-    color: 0x66aaff, transparent: true, opacity: 0.15,
-    side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false
-  })
-);
-earthGroup.add(atmo);
-
-/* ===== СОЛНЦЕ ===== */
-const sun = new THREE.Mesh(
-  new THREE.SphereGeometry(220, 64, 64),
-  new THREE.MeshBasicMaterial({ color: 0xfffef8 })
-);
+const sun = new THREE.Mesh(new THREE.SphereGeometry(220, 64, 64), new THREE.MeshBasicMaterial({color: 0xfffef8}));
 scene.add(sun);
-
-// Тени отключены — без артефактов на гранях
 const sunLight = new THREE.DirectionalLight(0xfff8e8, isMobile ? 3.2 : 4.0);
-sunLight.castShadow = false;
-scene.add(sunLight);
-scene.add(sunLight.target);
-
+scene.add(sunLight); scene.add(sunLight.target);
 const nightLight = new THREE.DirectionalLight(0x334466, 0.15);
 scene.add(nightLight);
-
 scene.add(new THREE.HemisphereLight(0x445577, 0x0a0a15, 0.15));
 scene.add(new THREE.AmbientLight(0x151825, 0.12));
-
 const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({
   map: (() => {
-    const s = 256;
-    const c = document.createElement('canvas'); c.width = c.height = s;
+    const s = 256; const c = document.createElement('canvas'); c.width = c.height = s;
     const x = c.getContext('2d');
-    const g = x.createRadialGradient(s/2, s/2, 0, s/2, s/2, s/2);
-    g.addColorStop(0, 'rgba(255,255,255,1)');
-    g.addColorStop(0.4, 'rgba(255,254,240,0.35)');
-    g.addColorStop(0.7, 'rgba(255,250,220,0.08)');
-    g.addColorStop(1, 'rgba(255,250,220,0)');
-    x.fillStyle = g;
-    x.fillRect(0, 0, s, s);
+    const g = x.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);
+    g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.4, 'rgba(255,254,240,0.35)');
+    g.addColorStop(0.7, 'rgba(255,250,220,0.08)'); g.addColorStop(1, 'rgba(255,250,220,0)');
+    x.fillStyle = g; x.fillRect(0, 0, s, s);
     return new THREE.CanvasTexture(c);
   })(),
-  transparent: true,
-  blending: THREE.AdditiveBlending,
-  depthWrite: false
+  transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
 }));
 sunGlow.scale.set(900, 900, 1);
 scene.add(sunGlow);
 
-/* ===== УПРАВЛЕНИЕ ===== */
+/* ============================================================
+   ФРАГМЕНТЫ — данные
+   ============================================================ */
+const CREW_FRAGMENTS = [
+  { id: 0, region: 0, type: 'backpack', title: 'Фрагмент 1/12 — Рюкзак инженера Лоу', text: 'День 14. Мы сняли показания сейсмографов. Регион отзывается на удар не так, как должен. Не как пустота и не как порода. Как будто что-то вздыхает под нами. Пиркс-старший сказал: продолжать по плану. Я — записал. Это первое, что я записал отдельно от протокола.' },
+  { id: 1, region: 1, type: 'tool', title: 'Фрагмент 2/12 — Геологический зонд', text: 'День 17. Ночью мы услышали. Все четверо одновременно. Не звук — вибрацию, которая имеет форму. Гул, из которого можно сложить предложение. Разобрать не удалось. Утром проверили приборы: ни один не зафиксировал. Мы не сошли с ума: аппаратура показала ноль. Значит, это было не снаружи.' },
+  { id: 2, region: 2, type: 'cloth', title: 'Фрагмент 3/12 — Обрывок скафандра Вишневского', text: 'День 21. Вишневский вышел наружу. Сказал, ему нужно проверить одно место. Вернулся через 4 часа вместо 40 минут. Сказал, не помнит, где был. Скафандр чистый, будто он и не выходил. Но кислород — на четверть меньше. Я спросил: что ты видел? Он ответил: «ничего, что я смог бы назвать».' },
+  { id: 3, region: 3, type: 'tool', title: 'Фрагмент 4/12 — Буровой бур', text: 'День 24. Мы прошли на глубину. Тоннель — не естественный: слишком ровные стены. Но и не сделанный: ни следов инструментов, ни швов. Кажется, порода здесь была всегда такой — просто мы раньше её не видели. Внутри — тепло. Не изнутри породы — из воздуха. Как будто кто-то дышит рядом, но тихо.' },
+  { id: 4, region: 4, type: 'backpack', title: 'Фрагмент 5/12 — Полевой рюкзак Пиркса-младшего', text: 'День 26. Мы нашли ещё один вход. Он был не там, где вчера. Топография не изменилась — я сверял карты трижды. Тем не менее, вход появился. Как будто структура открывается тому, кто уже начал её понимать. Пиркс-младший сказал: это уже не геология. Это архитектура.' },
+  { id: 5, region: 5, type: 'tool', title: 'Фрагмент 6/12 — Разряженный резак', text: 'День 29. Старший Пиркс вошёл первым. Вышел через час. Сказал: там пусто. Но когда мы вошли за ним — там было не пусто. Там был он. Второй старший Пиркс. Стоял у стены, смотрел на нас. Мы вышли. Первый Пиркс был с нами. Оба были настоящими.' },
+  { id: 6, region: 6, type: 'cloth', title: 'Фрагмент 7/12 — Лоскут от скафандра', text: 'День 31. Вишневский больше не выходит наружу. Сказал: «я уже там был, там мне нечего делать». Ел с нами, разговаривал. На вопрос, что он видел, отвечал: «себя». Я записал это, а потом стёр. Трижды. Не знаю зачем.' },
+  { id: 7, region: 7, type: 'tool', title: 'Фрагмент 8/12 — Планшет координат', text: 'День 34. Я начал видеть цифры. Не во сне — на поверхности приборов, когда они выключены. Сначала это были координаты. Я подумал — сбой. Проверил. Координаты указывают на Южный полюс, где ничего нет. Но чем дольше я смотрю, тем больше уверен: там действительно что-то есть.' },
+  { id: 8, region: 0, type: 'backpack', title: 'Фрагмент 9/12 — Рюкзак, найденный у кратера', text: 'День 37. Пиркс-младший ушёл ночью. Не взял ни еды, ни воды, ни связи. Я нашёл его через сутки в 4 километрах. Он сидел на краю кратера и смотрел вниз. Я спросил: что ты там видишь? Он ответил: «то, что видел я, не описать. Но оно смотрит на нас уже миллиард лет».' },
+  { id: 9, region: 1, type: 'cloth', title: 'Фрагмент 10/12 — Лоскут от последнего скафандра', text: 'День 40. Мы больше не разговариваем словами. Мы просто знаем, что делать. Я пошёл к востоку. Вишневский — к северу. Никто не давал команды. Просто все пошли. Это не безумие. Это — согласие.' },
+  { id: 10, region: 2, type: 'backpack', title: 'Фрагмент 11/12 — Рюкзак с передатчиком', text: 'День 42. Я заканчиваю. Передаю координаты. Если вы читаете это — идите к ядру. Не бойтесь. Оно не отвечает на вопросы, потому что оно не вопрос и не ответ. Оно — сам вопрос, заданный миллиард лет назад. И наш экипаж — первая попытка ответить.' },
+  { id: 11, region: 3, type: 'cloth', title: 'Фрагмент 12/12 — Прощальная записка', text: 'День 44. Прощайте. Мы ушли туда, где нас ждали. Не ищите нас как людей — мы теперь не там, где ищут. Если вам страшно — не бойтесь: страх — это форма непонимания, а мы понимаем. Мы оставили вам шанс вернуться.' }
+];
+const HIDDEN_FRAGMENTS = [
+  { id: 100, region: 1, type: 'tool', title: '◈ Скрытый фрагмент — «Солярис»', text: 'Мы не поняли, что он разумен, потому что он разумен не так, как мы. Он разумен по-своему. И это страшнее, чем если бы он был врагом. — Из личного архива доктора Снаута. Станция «Солярис», орбита.' },
+  { id: 101, region: 4, type: 'backpack', title: '◈ Скрытый фрагмент — «Эдем»', text: 'Мы хотели помочь. Мы построили им то, что считали правильным. Они не поняли. Они убили друг друга, потому что мы показали им то, чего они не должны были видеть. — Из отчёта координатора экспедиции на Эдем.' },
+  { id: 102, region: 7, type: 'cloth', title: '◈ Скрытый фрагмент — «Непобедимый»', text: 'Это не жизнь в нашем понимании. Это — эволюция, лишённая разума, но не лишённая цели. Кристаллическая форма, которая не мыслит, но действует. Её нельзя понять. Её можно только оставить позади. — Из последнего сообщения экипажа «Непобедимого».' }
+];
+
+const crewItems = [];
+const journalFound = new Set();
+const hiddenFound = new Set();
+
+/* ============================================================
+   ДЕТАЛИЗИРОВАННЫЕ МОДЕЛИ ПРЕДМЕТОВ
+   ============================================================ */
+function createFragmentMesh(type, isHidden = false) {
+  const group = new THREE.Group();
+
+  if (type === 'backpack') {
+    // ===== РЮКЗАК — 7 частей =====
+    const mainColor = isHidden ? 0x884466 : 0x7a6a4a;
+    const darkColor = isHidden ? 0x552244 : 0x4a3a2a;
+
+    const bodyGeo = new THREE.BoxGeometry(1.4, 1.6, 0.9);
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: mainColor, emissive: darkColor,
+      emissiveIntensity: 0.4, roughness: 0.85, metalness: 0.1
+    });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.y = 1;
+    group.add(body);
+
+    const lidGeo = new THREE.BoxGeometry(1.35, 0.35, 0.95);
+    const lidMat = new THREE.MeshStandardMaterial({
+      color: darkColor, emissive: 0x221111,
+      emissiveIntensity: 0.3, roughness: 0.9
+    });
+    const lid = new THREE.Mesh(lidGeo, lidMat);
+    lid.position.y = 1.9;
+    group.add(lid);
+
+    const pocketGeo = new THREE.BoxGeometry(0.9, 0.7, 0.15);
+    const pocketMat = new THREE.MeshStandardMaterial({ color: darkColor, roughness: 0.85 });
+    const pocket = new THREE.Mesh(pocketGeo, pocketMat);
+    pocket.position.set(0, 0.85, 0.5);
+    group.add(pocket);
+
+    const strapGeo = new THREE.BoxGeometry(0.13, 1.5, 0.1);
+    const strapMat = new THREE.MeshStandardMaterial({ color: 0x2a1a0a, roughness: 0.9 });
+    const strap1 = new THREE.Mesh(strapGeo, strapMat);
+    strap1.position.set(-0.45, 1.05, -0.5);
+    strap1.rotation.x = 0.1;
+    group.add(strap1);
+    const strap2 = new THREE.Mesh(strapGeo, strapMat);
+    strap2.position.set(0.45, 1.05, -0.5);
+    strap2.rotation.x = 0.1;
+    group.add(strap2);
+
+    const zipGeo = new THREE.BoxGeometry(0.85, 0.03, 0.02);
+    const zipMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.3 });
+    const zip = new THREE.Mesh(zipGeo, zipMat);
+    zip.position.set(0, 1.15, 0.58);
+    group.add(zip);
+
+    const patchGeo = new THREE.CircleGeometry(0.12, 12);
+    const patchMat = new THREE.MeshStandardMaterial({
+      color: 0xcc3333, emissive: 0x441111, emissiveIntensity: 0.4, side: THREE.DoubleSide
+    });
+    const patch = new THREE.Mesh(patchGeo, patchMat);
+    patch.position.set(0.4, 1.5, 0.46);
+    group.add(patch);
+
+  } else if (type === 'tool') {
+    // ===== ИНСТРУМЕНТ — 6 частей =====
+    const mainColor = isHidden ? 0xcc88aa : 0xaaaaaa;
+    const darkColor = isHidden ? 0x663355 : 0x445566;
+    const angle = Math.PI / 5;
+
+    const handleGeo = new THREE.CylinderGeometry(0.14, 0.16, 2.2, 12);
+    const handleMat = new THREE.MeshStandardMaterial({
+      color: mainColor, emissive: darkColor,
+      emissiveIntensity: 0.4, metalness: 0.7, roughness: 0.3
+    });
+    const handle = new THREE.Mesh(handleGeo, handleMat);
+    handle.position.y = 1.1;
+    handle.rotation.z = angle;
+    group.add(handle);
+
+    // Обмотка — 5 тонких колец
+    for (let i = 0; i < 5; i++) {
+      const ringGeo = new THREE.TorusGeometry(0.17, 0.015, 6, 12);
+      const ringMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.9 });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      const t = 0.55 + i * 0.25;
+      ring.position.set(-Math.sin(angle) * t, Math.cos(angle) * t, 0);
+      ring.rotation.x = Math.PI / 2;
+      ring.rotation.z = angle;
+      group.add(ring);
+    }
+
+    const headGeo = new THREE.BoxGeometry(0.6, 0.35, 0.4);
+    const headMat = new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.85, roughness: 0.25 });
+    const head = new THREE.Mesh(headGeo, headMat);
+    head.position.set(-Math.sin(angle) * 2.0, Math.cos(angle) * 2.0, 0);
+    head.rotation.z = angle;
+    group.add(head);
+
+    const btnGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.08, 8);
+    const btnMat = new THREE.MeshStandardMaterial({
+      color: 0x33dd33, emissive: 0x22aa22, emissiveIntensity: 0.9
+    });
+    const btn = new THREE.Mesh(btnGeo, btnMat);
+    btn.position.set(-Math.sin(angle) * 2.0 + 0.25, Math.cos(angle) * 2.0 + 0.18, 0);
+    group.add(btn);
+
+    const screenGeo = new THREE.BoxGeometry(0.18, 0.1, 0.02);
+    const screenMat = new THREE.MeshStandardMaterial({
+      color: 0x00aaff, emissive: 0x0066cc, emissiveIntensity: 1.0
+    });
+    const screen = new THREE.Mesh(screenGeo, screenMat);
+    screen.position.set(-Math.sin(angle) * 1.3 + 0.17, Math.cos(angle) * 1.3, 0.15);
+    screen.rotation.z = angle;
+    group.add(screen);
+
+  } else {
+    // ===== ТКАНЬ — 4 части =====
+    const mainColor = isHidden ? 0xcc6699 : 0xcc8844;
+    const darkColor = isHidden ? 0x663355 : 0x553311;
+
+    const clothGeo = new THREE.PlaneGeometry(1.9, 1.3, 4, 3);
+    const clothMat = new THREE.MeshStandardMaterial({
+      color: mainColor, emissive: darkColor,
+      emissiveIntensity: 0.4, side: THREE.DoubleSide, roughness: 0.95
+    });
+    const cloth = new THREE.Mesh(clothGeo, clothMat);
+    cloth.position.y = 1;
+    cloth.rotation.x = -Math.PI / 6;
+    cloth.rotation.z = Math.PI / 12;
+    group.add(cloth);
+
+    const cloth2Geo = new THREE.PlaneGeometry(1.5, 1.0, 3, 3);
+    const cloth2Mat = new THREE.MeshStandardMaterial({
+      color: darkColor, emissive: 0x331111,
+      emissiveIntensity: 0.3, side: THREE.DoubleSide, roughness: 0.98
+    });
+    const cloth2 = new THREE.Mesh(cloth2Geo, cloth2Mat);
+    cloth2.position.set(0.15, 1.15, 0.05);
+    cloth2.rotation.x = Math.PI / 8;
+    cloth2.rotation.y = Math.PI / 5;
+    group.add(cloth2);
+
+    // Бахрома — 8 полосок
+    for (let i = 0; i < 8; i++) {
+      const fringeGeo = new THREE.PlaneGeometry(0.04, 0.15);
+      const fringeMat = new THREE.MeshStandardMaterial({
+        color: mainColor, side: THREE.DoubleSide, roughness: 0.95
+      });
+      const fringe = new THREE.Mesh(fringeGeo, fringeMat);
+      fringe.position.set(-0.85 + i * 0.22, 0.42, 0.55);
+      fringe.rotation.x = -Math.PI / 6;
+      group.add(fringe);
+    }
+
+    // Пятно от грязи
+    const stainGeo = new THREE.CircleGeometry(0.18, 12);
+    const stainMat = new THREE.MeshStandardMaterial({
+      color: 0x442211, transparent: true, opacity: 0.6, side: THREE.DoubleSide
+    });
+    const stain = new THREE.Mesh(stainGeo, stainMat);
+    stain.position.set(0.25, 1.05, 0.03);
+    stain.rotation.x = -Math.PI / 6;
+    group.add(stain);
+  }
+
+  // Свечение вокруг
+  const glowColor = isHidden ? 0xff66aa : 0x6699dd;
+  const glowGeo = new THREE.SphereGeometry(isHidden ? 4.5 : 3.5, 16, 16);
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: glowColor, transparent: true, opacity: isHidden ? 0.22 : 0.18,
+    blending: THREE.AdditiveBlending, depthWrite: false
+  });
+  const glow = new THREE.Mesh(glowGeo, glowMat);
+  glow.position.y = 1.2;
+  glow.userData.isGlow = true;
+  group.add(glow);
+
+  return group;
+}
+
+function spawnAllItems() {
+  const segW = WORLD_SIZE / REGION_COUNT;
+  CREW_FRAGMENTS.forEach((frag) => {
+    const localT = 0.15 + Math.random() * 0.7;
+    const regX = -WORLD_HALF + segW * (frag.region + localT);
+    const regZ = (Math.random() - 0.5) * WORLD_SIZE * 0.85;
+    const mesh = createFragmentMesh(frag.type, false);
+    const gh = computeGroundH(regX, regZ);
+    mesh.position.set(regX, gh, regZ);
+    mesh.userData = { fragId: frag.id, collected: false, baseY: gh, isHidden: false };
+    scene.add(mesh); crewItems.push(mesh);
+  });
+  HIDDEN_FRAGMENTS.forEach((frag) => {
+    const regX = -WORLD_HALF + segW * (frag.region + 0.95);
+    const regZ = (Math.random() - 0.5) * WORLD_SIZE * 0.95;
+    const mesh = createFragmentMesh(frag.type, true);
+    const gh = computeGroundH(regX, regZ);
+    mesh.position.set(regX, gh, regZ);
+    mesh.userData = { fragId: frag.id, collected: false, baseY: gh, isHidden: true };
+    scene.add(mesh); crewItems.push(mesh);
+  });
+}
+spawnAllItems();
+
+/* ============================================================
+   ДОСТИЖЕНИЯ
+   ============================================================ */
+const ACHIEVEMENTS = [
+  { id: 'first', icon: '🔍', title: 'Первый след', desc: 'Найти первый фрагмент', check: () => foundCount >= 1 },
+  { id: 'half', icon: '📖', title: 'Половина пути', desc: 'Найти 6 фрагментов', check: () => foundCount >= 6 },
+  { id: 'all', icon: '📚', title: 'Полный журнал', desc: 'Найти все 12 фрагментов', check: () => foundCount >= 12 },
+  { id: 'hidden1', icon: '◈', title: 'Лем-исследователь', desc: 'Найти 1 скрытый фрагмент', check: () => hiddenCount >= 1 },
+  { id: 'hidden3', icon: '💠', title: 'Знаток Лема', desc: 'Найти все 3 скрытых', check: () => hiddenCount >= 3 },
+  { id: 'noTurbo', icon: '🚶', title: 'Пешеход', desc: 'Найти 3 фрагмента без TURBO', check: () => foundWithoutTurbo >= 3 },
+  { id: 'nightOwl', icon: '🌙', title: 'Ночной житель', desc: 'Найти фрагмент ночью', check: () => foundAtNight },
+  { id: 'finale', icon: '🎬', title: 'Фиаско', desc: 'Дойти до финала', check: () => finaleReached }
+];
+const unlockedAchievements = new Set();
+
+function checkAchievements() {
+  ACHIEVEMENTS.forEach(a => {
+    if (unlockedAchievements.has(a.id)) return;
+    if (a.check()) {
+      unlockedAchievements.add(a.id);
+      showAchievementToast(a);
+      playAchievement();
+      saveProgress();
+    }
+  });
+  updateAchievementsHUD();
+}
+
+function showAchievementToast(a) {
+  const toast = document.getElementById('achievementToast');
+  document.getElementById('toastTitle').textContent = `${a.icon} ${a.title}`;
+  document.getElementById('toastDesc').textContent = a.desc;
+  toast.classList.add('visible');
+  setTimeout(() => toast.classList.remove('visible'), 5000);
+}
+
+function updateAchievementsHUD() {
+  document.getElementById('achievementCount').textContent = unlockedAchievements.size;
+  document.getElementById('achievementHint').style.display = unlockedAchievements.size > 0 ? 'block' : 'none';
+}
+
+function renderAchievements() {
+  const list = document.getElementById('achievementsList');
+  list.innerHTML = '';
+  ACHIEVEMENTS.forEach(a => {
+    const unlocked = unlockedAchievements.has(a.id);
+    const div = document.createElement('div');
+    div.className = 'achievement ' + (unlocked ? 'unlocked' : 'locked');
+    div.innerHTML = `
+      <div class="icon">${a.icon}</div>
+      <div class="info">
+        <div class="title">${a.title}</div>
+        <div class="desc">${a.desc}</div>
+      </div>
+      <div style="color:${unlocked ? '#7fff7f' : '#555'};font-size:11px;letter-spacing:1px">${unlocked ? '✓' : '🔒'}</div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+document.getElementById('achievementsBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  renderAchievements();
+  document.getElementById('achievementsModal').classList.remove('hidden');
+});
+function closeAchievements() { document.getElementById('achievementsModal').classList.add('hidden'); }
+
+/* ============================================================
+   HUD, ЖУРНАЛ, КОМПАС, СБОР
+   ============================================================ */
+let foundCount = 0;
+let hiddenCount = 0;
+let foundWithoutTurbo = 0;
+let foundAtNight = false;
+let finaleReached = false;
+let currentIsDay = true;
+
+function updateJournalHUD() {
+  document.getElementById('foundCount').textContent = foundCount;
+  document.getElementById('extraFound').textContent = hiddenCount;
+}
+
+function updateNearestSignal(cx, cz) {
+  let nearest = null, minD2 = Infinity;
+  for (const item of crewItems) {
+    if (item.userData.collected) continue;
+    const dx = item.position.x - cx, dz = item.position.z - cz;
+    const d2 = dx * dx + dz * dz;
+    if (d2 < minD2) { minD2 = d2; nearest = { dx, dz, d: Math.sqrt(d2) }; }
+  }
+  const arrowEl = document.getElementById('compassArrow');
+  const distEl = document.getElementById('compassDistance');
+  const nearEl = document.getElementById('nearestSignal');
+  if (!nearest) {
+    arrowEl.style.opacity = '0';
+    distEl.textContent = '—';
+    nearEl.textContent = 'все найдены';
+    return;
+  }
+  arrowEl.style.opacity = '1';
+  const worldAngle = Math.atan2(nearest.dx, nearest.dz);
+  const camAngle = -yaw;
+  let relAngle = worldAngle - camAngle;
+  while (relAngle > Math.PI) relAngle -= 2 * Math.PI;
+  while (relAngle < -Math.PI) relAngle += 2 * Math.PI;
+  arrowEl.style.transform = `rotate(${relAngle - Math.PI/2}rad)`;
+  distEl.textContent = `${Math.floor(nearest.d)}м`;
+  nearEl.textContent = `${Math.floor(nearest.d)}м`;
+}
+
+let logTimeout = null;
+function showLogMessage(frag, isHidden = false) {
+  const el = document.getElementById('logMessage');
+  document.getElementById('logPrefix').textContent = frag.title;
+  document.getElementById('logText').textContent = frag.text;
+  el.classList.remove('hidden');
+  el.style.opacity = '1';
+  el.style.borderColor = isHidden ? 'rgba(255,150,200,.6)' : 'rgba(157,216,255,.5)';
+  clearTimeout(logTimeout);
+  logTimeout = setTimeout(() => {
+    el.style.opacity = '0';
+    setTimeout(() => el.classList.add('hidden'), 500);
+  }, 12000);
+  speak(frag.text);
+}
+
+function addJournalEntry(fragId, playSound = true) {
+  const isHidden = fragId >= 100;
+  const set = isHidden ? hiddenFound : journalFound;
+  if (set.has(fragId)) return;
+  set.add(fragId);
+  const frag = isHidden ? HIDDEN_FRAGMENTS.find(f => f.id === fragId) : CREW_FRAGMENTS[fragId];
+  if (!frag) return;
+  const list = document.getElementById('journalEntries');
+  const regionKey = isHidden ? `h${frag.region}` : frag.region;
+  const regionName = REGIONS[frag.region].name;
+  let regionBlock = list.querySelector(`[data-region="${regionKey}"]`);
+  if (!regionBlock) {
+    regionBlock = document.createElement('div');
+    regionBlock.dataset.region = regionKey;
+    const title = document.createElement('div');
+    title.className = 'journal-region';
+    title.textContent = isHidden ? `◈ Скрытое — ${regionName}` : `◆ ${regionName}`;
+    if (isHidden) title.style.color = '#ff9966';
+    regionBlock.appendChild(title);
+    const blocks = Array.from(list.querySelectorAll('[data-region]'));
+    let insertBefore = null;
+    const sortKey = (b) => { const k = b.dataset.region; if (k.startsWith('h')) return parseFloat(k.slice(1)) + 0.5; return parseFloat(k); };
+    const curKey = sortKey(regionBlock);
+    for (const b of blocks) if (sortKey(b) > curKey) { insertBefore = b; break; }
+    if (insertBefore) list.insertBefore(regionBlock, insertBefore);
+    else list.appendChild(regionBlock);
+  }
+  const entry = document.createElement('div');
+  entry.className = 'journal-entry' + (isHidden ? ' extra' : '');
+  entry.innerHTML = `<div class="num">${isHidden ? '◈ СКРЫТО' : (fragId + 1) + '/12'}</div><div class="text">${frag.text}</div>`;
+  regionBlock.appendChild(entry);
+  if (playSound) { if (isHidden) playExtraFound(); else playFragmentCollected(); }
+}
+
+function checkCollection(cx, cz) {
+  for (const item of crewItems) {
+    if (item.userData.collected) continue;
+    const dx = cx - item.position.x, dz = cz - item.position.z;
+    if (dx * dx + dz * dz < 36) {
+      item.userData.collected = true;
+      item.visible = false;
+      const id = item.userData.fragId;
+      const isHidden = item.userData.isHidden;
+      if (isHidden) {
+        hiddenCount++;
+        const frag = HIDDEN_FRAGMENTS.find(f => f.id === id);
+        addJournalEntry(id, true);
+        showLogMessage(frag, true);
+      } else {
+        foundCount++;
+        const frag = CREW_FRAGMENTS[id];
+        addJournalEntry(id, true);
+        showLogMessage(frag, false);
+        if (!turboMode) foundWithoutTurbo++;
+        if (!currentIsDay) foundAtNight = true;
+      }
+      updateJournalHUD();
+      saveProgress();
+      checkAchievements();
+      if (foundCount === 12) setTimeout(triggerFinale, 4500);
+    }
+  }
+}
+
+/* ============================================================
+   КАРТА
+   ============================================================ */
+function drawMap() {
+  const canvas = document.getElementById('mapCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = 'rgba(0,5,15,1)';
+  ctx.fillRect(0, 0, W, H);
+  const segW = W / REGION_COUNT;
+  REGIONS.forEach((r, i) => {
+    ctx.fillStyle = r.color + '30';
+    ctx.fillRect(i * segW, 0, segW, H);
+    ctx.strokeStyle = r.color + '60';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(i * segW, 0, segW, H);
+    ctx.save();
+    ctx.translate(i * segW + segW / 2, 30);
+    ctx.fillStyle = r.color;
+    ctx.font = 'bold 11px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${i}`, 0, 0);
+    ctx.restore();
+  });
+  ctx.strokeStyle = 'rgba(157,216,255,.08)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 10; i++) {
+    const x = (i / 10) * W;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    const y = (i / 10) * H;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  crewItems.forEach(item => {
+    const px = ((item.position.x + WORLD_HALF) / WORLD_SIZE) * W;
+    const py = ((item.position.z + WORLD_HALF) / WORLD_SIZE) * H;
+    if (item.userData.collected) {
+      ctx.fillStyle = item.userData.isHidden ? '#ff9966' : '#7fff7f';
+      ctx.shadowColor = item.userData.isHidden ? '#ff9966' : '#7fff7f';
+      ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+    } else {
+      ctx.fillStyle = 'rgba(157,216,255,.25)';
+      ctx.beginPath(); ctx.arc(px, py, 2.5, 0, Math.PI * 2); ctx.fill();
+    }
+  });
+  const px = ((camera.position.x + WORLD_HALF) / WORLD_SIZE) * W;
+  const py = ((camera.position.z + WORLD_HALF) / WORLD_SIZE) * H;
+  ctx.fillStyle = '#ffd77f';
+  ctx.shadowColor = '#ffd77f';
+  ctx.shadowBlur = 12;
+  ctx.beginPath();
+  ctx.moveTo(px, py - 8); ctx.lineTo(px - 6, py + 6); ctx.lineTo(px + 6, py + 6);
+  ctx.closePath(); ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+  if (tab === 'entries') {
+    document.querySelectorAll('.tab-btn')[0].classList.add('active');
+    document.getElementById('tabEntries').classList.remove('hidden');
+  } else {
+    document.querySelectorAll('.tab-btn')[1].classList.add('active');
+    document.getElementById('tabMap').classList.remove('hidden');
+    drawMap();
+  }
+}
+
+function exportJournal() {
+  let text = '═══ БОРТОВОЙ ЖУРНАЛ ЭКИПАЖА «ПИРКС» ═══\n\n';
+  text += `Найдено: ${foundCount}/12 · Скрытых: ${hiddenCount}/3\n`;
+  text += `Достижений: ${unlockedAchievements.size}/${ACHIEVEMENTS.length}\n\n`;
+  CREW_FRAGMENTS.forEach(frag => {
+    if (journalFound.has(frag.id)) text += `[${frag.id + 1}/12] ${REGIONS[frag.region].name}\n${frag.text}\n\n`;
+  });
+  HIDDEN_FRAGMENTS.forEach(frag => {
+    if (hiddenFound.has(frag.id)) text += `[◈] ${frag.title}\n${frag.text}\n\n`;
+  });
+  navigator.clipboard.writeText(text).then(() => alert('Журнал скопирован в буфер обмена.')).catch(() => {
+    const w = window.open('', '_blank');
+    w.document.write('<pre>' + text + '</pre>');
+  });
+}
+
+const easterEggEl = document.getElementById('easterEgg');
+let easterEggShown = false;
+function showEasterEgg() {
+  if (easterEggShown) return;
+  easterEggShown = true;
+  easterEggEl.textContent = '«Мы не ищем других. Мы ищем себя — в чужих зеркалах». — С. Лем';
+  easterEggEl.classList.add('visible');
+  setTimeout(() => easterEggEl.classList.remove('visible'), 10000);
+}
+
+function openJournal() {
+  playJournalOpen();
+  document.getElementById('journalModal').classList.remove('hidden');
+}
+function closeJournal() { document.getElementById('journalModal').classList.add('hidden'); }
+document.getElementById('journalBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const m = document.getElementById('journalModal');
+  if (m.classList.contains('hidden')) openJournal(); else closeJournal();
+});
+addEventListener('keydown', e => {
+  if (e.code === 'KeyJ') {
+    const m = document.getElementById('journalModal');
+    if (m.classList.contains('hidden')) openJournal(); else closeJournal();
+  }
+});
+
+/* ============================================================
+   ФИНАЛ
+   ============================================================ */
+function triggerFinale() {
+  playFinale();
+  finaleReached = true;
+  checkAchievements();
+  document.getElementById('finalModal').classList.remove('hidden');
+  document.getElementById('finalText').innerHTML = `
+    <p style="font-style:italic;color:#b8c8e0;line-height:1.9;font-size:14px">
+      Вы стоите у края последней воронки. Внутри — мягкое свечение, не имеющее источника.<br><br>
+      В журнале — 12 фрагментов. Все они говорят об одном. Экипаж «Пиркс» не погиб. Экипаж был приглашён.<br><br>
+      Радио молчит. Земля висит на небе — такая же далёкая, как в первый день.<br><br>
+      Что вы сделаете?
+    </p>
+  `;
+  document.getElementById('finalChoices').innerHTML = `
+    <button onclick="chooseFinal(0)">ВОЙТИ</button>
+    <button onclick="chooseFinal(1)">УЙТИ</button>
+    <button onclick="chooseFinal(2)">ПЕРЕДАТЬ СИГНАЛ</button>
+  `;
+  speak('Вы стоите у края последней воронки. В журнале двенадцать фрагментов. Экипаж не погиб. Экипаж был приглашён.');
+}
+
+function chooseFinal(choice) {
+  const text = document.getElementById('finalText');
+  const choices = document.getElementById('finalChoices');
+  let ending = '', spoken = '';
+  if (choice === 0) {
+    ending = `<p style="color:#9fd8ff;font-style:italic;font-size:14px;line-height:2">
+      Вы делаете шаг внутрь.<br><br>Свет не ослепляет — он просто становится всем.<br><br>
+      Где-то далеко, на Земле, кто-то записывает: «Связь с Луной прервана. Экипаж не отвечает».<br><br>
+      Это неправда. Экипаж отвечает. Просто не словами.</p>
+      <p style="color:#ffd77f;font-size:11px;letter-spacing:2px;text-align:center;margin-top:24px">— КОНЕЦ —<br>«Мы стали частью ответа»</p>`;
+    spoken = 'Вы делаете шаг внутрь. Свет становится всем. Экипаж отвечает. Просто не словами.';
+    playChime(330, 3, 'sine');
+  } else if (choice === 1) {
+    ending = `<p style="color:#9fd8ff;font-style:italic;font-size:14px;line-height:2">
+      Вы отворачиваетесь.<br><br>Ровер заводится с первого раза.<br><br>
+      Но когда вы оглядываетесь в последний раз — за вами стоит человек в скафандре. Лица не видно.<br><br>
+      Он идёт рядом с вами всю дорогу до базы.</p>
+      <p style="color:#ffd77f;font-size:11px;letter-spacing:2px;text-align:center;margin-top:24px">— КОНЕЦ —<br>«Что-то вернулось вместе с вами»</p>`;
+    spoken = 'Вы отворачиваетесь. Но за вами стоит человек в скафандре. Он идёт рядом. Он — один из них.';
+    playChime(220, 3, 'sine');
+  } else {
+    ending = `<p style="color:#9fd8ff;font-style:italic;font-size:14px;line-height:2">
+      Вы передаёте координаты на Землю.<br><br>Ответ приходит через 2 минуты — быстрее, чем должен.<br><br>
+      «Принято. Следующая экспедиция вылетает через 6 месяцев. Спасибо».<br><br>
+      Под текстом — приписка, которую никто не отправлял:</p>
+      <p style="color:#ffd77f;font-style:italic;font-size:14px;line-height:2;text-align:center;margin-top:18px">
+      «Не отправляйте их.<br>Они не вернутся.<br>Никто не возвращается».</p>
+      <p style="color:#ffd77f;font-size:11px;letter-spacing:2px;text-align:center;margin-top:24px">— КОНЕЦ —<br>«Фиаско»</p>`;
+    spoken = 'Вы передаёте сигнал. Ответ приходит слишком быстро. Не отправляйте их. Никто не возвращается.';
+    playChime(110, 4, 'sine');
+  }
+  text.innerHTML = ending;
+  choices.innerHTML = `
+    <button onclick="restartWithAd()">НАЧАТЬ ЗАНОВО</button>
+    <button onclick="clearProgressAndReload()">СБРОСИТЬ ПРОГРЕСС</button>
+  `;
+  speak(spoken);
+}
+
+async function restartWithAd() {
+  const button = event.target;
+  button.disabled = true;
+  button.textContent = 'ЗАГРУЗКА...';
+  const shown = await showRewardedAd();
+  if (shown) {
+    button.textContent = 'СПАСИБО! ПЕРЕЗАПУСК...';
+    setTimeout(() => {
+      camera.position.set(0, 2, 0);
+      yaw = 0; pitch = 0;
+      velocityY = 0;
+      horizVel.set(0, 0, 0);
+      document.getElementById('finalModal').classList.add('hidden');
+      document.getElementById('overlay').classList.remove('hidden');
+      finaleReached = false;
+    }, 800);
+  } else {
+    button.textContent = 'НАЧАТЬ ЗАНОВО';
+    button.disabled = false;
+    camera.position.set(0, 2, 0);
+    yaw = 0; pitch = 0;
+    velocityY = 0;
+    horizVel.set(0, 0, 0);
+    document.getElementById('finalModal').classList.add('hidden');
+    document.getElementById('overlay').classList.remove('hidden');
+    finaleReached = false;
+  }
+}
+
+function clearProgressAndReload() {
+  clearProgress();
+  location.reload();
+}
+
+/* ============================================================
+   УПРАВЛЕНИЕ
+   ============================================================ */
 const keys = {};
 let yaw = 0, pitch = 0;
 let velocityY = 0;
@@ -703,15 +1870,9 @@ addEventListener('keyup', e => keys[e.code] = false);
 document.getElementById('overlay').addEventListener('click', () => {
   document.getElementById('overlay').classList.add('hidden');
   updateMode();
-  if (!isMobile) {
-    renderer.domElement.requestPointerLock();
-  }
-  radio.play().then(() => {
-    musicPlaying = true;
-    musicBtn.classList.add('playing');
-  }).catch(err => {
-    console.warn('Радио не запустилось:', err);
-  });
+  if (!isMobile) renderer.domElement.requestPointerLock();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  radio.play().then(() => { musicPlaying = true; musicBtn.classList.add('playing'); }).catch(()=>{});
 });
 
 function updateMode() {
@@ -722,14 +1883,8 @@ function updateMode() {
 
 renderer.domElement.addEventListener('mousedown', e => {
   e.preventDefault();
-  if (e.button === 2) {
-    isWalking = !isWalking;
-    updateMode();
-    return;
-  }
-  if (document.pointerLockElement !== renderer.domElement) {
-    renderer.domElement.requestPointerLock();
-  }
+  if (e.button === 2) { isWalking = !isWalking; updateMode(); return; }
+  if (document.pointerLockElement !== renderer.domElement) renderer.domElement.requestPointerLock();
 });
 
 addEventListener('mousemove', e => {
@@ -743,40 +1898,28 @@ addEventListener('mousemove', e => {
 renderer.domElement.addEventListener('contextmenu', e => e.preventDefault());
 
 let lastTouchX = 0, lastTouchY = 0, lastTapTime = 0, touchStartTime = 0, touchMoved = false;
-
 renderer.domElement.addEventListener('touchstart', e => {
   e.preventDefault();
   if (e.touches.length === 1) {
-    lastTouchX = e.touches[0].clientX;
-    lastTouchY = e.touches[0].clientY;
-    touchStartTime = Date.now();
-    touchMoved = false;
+    lastTouchX = e.touches[0].clientX; lastTouchY = e.touches[0].clientY;
+    touchStartTime = Date.now(); touchMoved = false;
   }
 }, {passive: false});
-
 renderer.domElement.addEventListener('touchmove', e => {
   e.preventDefault();
   if (e.touches.length === 1) {
-    const dx = e.touches[0].clientX - lastTouchX;
-    const dy = e.touches[0].clientY - lastTouchY;
+    const dx = e.touches[0].clientX - lastTouchX, dy = e.touches[0].clientY - lastTouchY;
     if (Math.abs(dx) > 2 || Math.abs(dy) > 2) touchMoved = true;
-    yaw -= dx * 0.005;
-    pitch -= dy * 0.005;
+    yaw -= dx * 0.005; pitch -= dy * 0.005;
     pitch = Math.max(-Math.PI/2 + 0.05, Math.min(Math.PI/2 - 0.05, pitch));
-    lastTouchX = e.touches[0].clientX;
-    lastTouchY = e.touches[0].clientY;
+    lastTouchX = e.touches[0].clientX; lastTouchY = e.touches[0].clientY;
   }
 }, {passive: false});
-
 renderer.domElement.addEventListener('touchend', e => {
   e.preventDefault();
   const now = Date.now();
-  const touchDuration = now - touchStartTime;
-  if (!touchMoved && touchDuration < 200) {
-    if (now - lastTapTime < 300) {
-      isWalking = !isWalking;
-      updateMode();
-    }
+  if (!touchMoved && now - touchStartTime < 200) {
+    if (now - lastTapTime < 300) { isWalking = !isWalking; updateMode(); }
     lastTapTime = now;
   }
 }, {passive: false});
@@ -789,7 +1932,6 @@ turboBtn.addEventListener('click', e => {
   document.getElementById('speedInfo').textContent = turboMode ? 'Скорость: TURBO ×50' : 'Скорость: обычная';
 });
 
-/* ===== ФИЗИКА ===== */
 const LUNAR_GRAVITY = 1.62;
 const JUMP_VELOCITY = 20;
 const BASE_SPEED = 12;
@@ -800,7 +1942,6 @@ const AIR_FRICTION = 0.995;
 
 const horizVel = new THREE.Vector3();
 const clock = new THREE.Clock();
-
 const DAY_DURATION = 55;
 const NIGHT_DURATION = 10;
 const FULL_CYCLE = DAY_DURATION + NIGHT_DURATION;
@@ -813,6 +1954,7 @@ function animate() {
 
   cycleTime = (cycleTime + dt) % FULL_CYCLE;
   const isDay = cycleTime < DAY_DURATION;
+  currentIsDay = isDay;
   const phase = isDay ? cycleTime / DAY_DURATION : (cycleTime - DAY_DURATION) / NIGHT_DURATION;
   const sunAngle = isDay ? phase * Math.PI : Math.PI + phase * Math.PI;
   const sunHeight = Math.sin(sunAngle);
@@ -826,7 +1968,6 @@ function animate() {
   sunGlow.position.copy(sun.position);
   sunLight.position.copy(sun.position);
   sunLight.target.position.copy(camera.position);
-
   nightLight.position.set(-sun.position.x, -sun.position.y, -sun.position.z);
   nightLight.target = camera;
 
@@ -848,7 +1989,6 @@ function animate() {
   if (keys['KeyD']) input.add(right);
   if (keys['KeyA']) input.sub(right);
   if (isWalking && input.lengthSq() === 0) input.add(forward);
-
   if (input.lengthSq() > 0) input.normalize().multiplyScalar(speed);
 
   if (onGround) {
@@ -871,8 +2011,6 @@ function animate() {
   if (camera.position.z > WORLD_HALF) camera.position.z -= WORLD_SIZE;
   else if (camera.position.z < -WORLD_HALF) camera.position.z += WORLD_SIZE;
 
-  const prevVelocityY = velocityY;
-
   velocityY -= LUNAR_GRAVITY * dt;
   if (keys['Space'] && onGround) { velocityY = JUMP_VELOCITY; onGround = false; }
   camera.position.y += velocityY * dt;
@@ -883,11 +2021,7 @@ function animate() {
   const dirZ = horizSpeed > 0.1 ? horizVel.z / horizSpeed : 0;
 
   const hHere = sampleHeight(camera.position.x, camera.position.z);
-  const hAhead = sampleHeight(
-    camera.position.x + dirX * stepAhead,
-    camera.position.z + dirZ * stepAhead
-  );
-
+  const hAhead = sampleHeight(camera.position.x + dirX * stepAhead, camera.position.z + dirZ * stepAhead);
   const gh = Math.max(hHere, hAhead) + 2;
   const lookAhead = velocityY < 0 ? velocityY * dt : 0;
   const targetY = gh - lookAhead;
@@ -904,6 +2038,23 @@ function animate() {
   camera.rotation.y = yaw;
   camera.rotation.x = pitch;
 
+  checkCollection(camera.position.x, camera.position.z);
+  updateNearestSignal(camera.position.x, camera.position.z);
+
+  const t = performance.now() * 0.001;
+  crewItems.forEach((item, i) => {
+    if (item.userData.collected) return;
+    item.rotation.y += 0.008;
+    item.children.forEach(child => {
+      if (child.userData.isGlow) {
+        child.material.opacity = 0.15 + Math.sin(t * 2 + i) * 0.12;
+        const scale = 1 + Math.sin(t * 1.5 + i) * 0.15;
+        child.scale.set(scale, scale, scale);
+      }
+    });
+    item.position.y = item.userData.baseY + Math.sin(t * 1.2 + i) * 0.5;
+  });
+
   const rid = regionAt(camera.position.x);
   const regionEl = document.getElementById('region');
   if (regionEl && regionEl.dataset.rid !== String(rid)) {
@@ -916,6 +2067,18 @@ function animate() {
 
   renderer.render(scene, camera);
 }
+
+updateJournalHUD();
+updateAchievementsHUD();
+loadProgress().then(() => { console.log('[Sync] Прогресс загружен'); });
+
+const originalAddJournal = addJournalEntry;
+addJournalEntry = function(id, playSound) {
+  const wasHidden = id >= 100;
+  const wasNew = wasHidden ? !hiddenFound.has(id) : !journalFound.has(id);
+  originalAddJournal(id, playSound);
+  if (wasHidden && wasNew) showEasterEgg();
+};
 
 animate();
 
