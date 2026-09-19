@@ -527,7 +527,30 @@ renderer.toneMappingExposure = 1.05;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000000);
+
+/* ⟵ ИЗМЕНЕНО: мягкий градиентный скайбокс вместо резкого чёрного фона */
+const skyCanvas = document.createElement('canvas');
+skyCanvas.width = 2;
+skyCanvas.height = 1024;
+const skyCtx = skyCanvas.getContext('2d');
+const skyGrad = skyCtx.createLinearGradient(0, 0, 0, 1024);
+skyGrad.addColorStop(0.00, '#000000');
+skyGrad.addColorStop(0.42, '#000000');
+skyGrad.addColorStop(0.55, '#010103');
+skyGrad.addColorStop(0.68, '#04050a');
+skyGrad.addColorStop(0.80, '#0a0c12');
+skyGrad.addColorStop(0.90, '#12141c');
+skyGrad.addColorStop(1.00, '#1a1c26');
+skyCtx.fillStyle = skyGrad;
+skyCtx.fillRect(0, 0, 2, 1024);
+const skyTex = new THREE.CanvasTexture(skyCanvas);
+skyTex.colorSpace = THREE.SRGBColorSpace;
+skyTex.mapping = THREE.EquirectangularReflectionMapping;
+scene.background = skyTex;
+
+/* ⟵ ИЗМЕНЕНО: очень мягкий туман — растворяет горизонт в 10 раз плавнее */
+scene.fog = new THREE.FogExp2(0x07080d, 0.000028);
+
 const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.5, 400000);
 camera.position.set(-80, 2, -80);
 
@@ -658,13 +681,21 @@ terrainGeo.computeVertexNormals();
     if (y < -15) { const k = Math.min(1, (-y - 15) / 120); r -= 0.18*k; g -= 0.17*k; b -= 0.15*k; }
     const slope = 1 - Math.max(0, ny);
     r -= slope * 0.22; g -= slope * 0.22; b -= slope * 0.20;
+
+    /* ⟵ ИЗМЕНЕНО: плавное затемнение к горизонту — сливается с туманом, убирает ломаную линию края */
+    const vx = posAttr.getX(i), vz = posAttr.getZ(i);
+    const distFromCenter = Math.sqrt(vx*vx + vz*vz);
+    const horizonFade = Math.min(1, distFromCenter / (TERRAIN_SIZE * 0.42));
+    const fadeMul = 1.0 - horizonFade * 0.75;
+    r *= fadeMul; g *= fadeMul; b *= fadeMul;
+
     colors[i*3] = Math.max(0, Math.min(1, r));
     colors[i*3+1] = Math.max(0, Math.min(1, g));
     colors[i*3+2] = Math.max(0, Math.min(1, b));
   }
   terrainGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 }
-const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, color: 0xffffff, roughness: 0.98, metalness: 0.0, flatShading: false });
+const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, color: 0xffffff, roughness: 0.98, metalness: 0.0, flatShading: false, fog: true });
 const terrain = new THREE.Mesh(terrainGeo, terrainMat);
 terrain.frustumCulled = false; terrain.receiveShadow = true; terrain.castShadow = false;
 scene.add(terrain);
@@ -791,7 +822,7 @@ function makeMilkyWayStars() {
   }
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
   geo.setAttribute('color', new THREE.Float32BufferAttribute(col,3));
-  return new THREE.Points(geo, new THREE.PointsMaterial({ size:1.6, map:starTex, transparent:true, opacity:0.9, blending:THREE.AdditiveBlending, depthWrite:false, depthTest:true, sizeAttenuation:false, vertexColors:true }));
+  return new THREE.Points(geo, new THREE.PointsMaterial({ size:1.6, map:starTex, transparent:true, opacity:0.9, blending:THREE.AdditiveBlending, depthWrite:false, depthTest:true, sizeAttenuation:false, vertexColors:true, fog:false }));
 }
 scene.add(makeMilkyWayStars());
 
@@ -805,7 +836,7 @@ earthGroup.rotation.z = THREE.MathUtils.degToRad(23.5);
 earthGroup.rotation.x = THREE.MathUtils.degToRad(-22);
 earthGroup.position.copy(EARTH_OFFSET);
 earthGroup.updateMatrix();
-const earthMat = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:1.0, metalness:0.0, emissive:0xffffff, emissiveIntensity:1.2, transparent:false, opacity:1.0, side: THREE.FrontSide, depthWrite:true, depthTest:true });
+const earthMat = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:1.0, metalness:0.0, emissive:0xffffff, emissiveIntensity:1.2, transparent:false, opacity:1.0, side: THREE.FrontSide, depthWrite:true, depthTest:true, fog:false });
 const earth = new THREE.Mesh(new THREE.SphereGeometry(18000, 128, 96), earthMat);
 earth.rotation.y = THREE.MathUtils.degToRad(-30);
 earth.rotation.x = THREE.MathUtils.degToRad(-15);
@@ -822,7 +853,7 @@ earthTexLoader.load('https://unpkg.com/three-globe/example/img/earth-blue-marble
   }, undefined, () => { earthGroup.visible = false; });
 
 const SUN_HEIGHT_BASE = 8000;
-const sun = new THREE.Mesh(new THREE.SphereGeometry(1500, 32, 32), new THREE.MeshBasicMaterial({color:0xfffef8}));
+const sun = new THREE.Mesh(new THREE.SphereGeometry(1500, 32, 32), new THREE.MeshBasicMaterial({color:0xfffef8, fog:false}));
 scene.add(sun);
 const sunGlowTex = (() => {
   const s = 256, c = document.createElement('canvas'); c.width = c.height = s;
@@ -833,7 +864,7 @@ const sunGlowTex = (() => {
   x.fillStyle = g; x.fillRect(0,0,s,s);
   return new THREE.CanvasTexture(c);
 })();
-const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({map:sunGlowTex, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false}));
+const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({map:sunGlowTex, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, fog:false}));
 sunGlow.scale.set(5000, 5000, 1);
 scene.add(sunGlow);
 const sunLight = new THREE.DirectionalLight(0xfff8e8, 5.5);
