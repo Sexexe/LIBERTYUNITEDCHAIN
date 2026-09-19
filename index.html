@@ -24,10 +24,7 @@
 
   #langBtn{position:fixed;top:max(14px,env(safe-area-inset-top));left:max(14px,env(safe-area-inset-left));z-index:120;padding:9px 16px;font-family:ui-monospace,monospace;font-size:12px;color:var(--text-bright);letter-spacing:2px;cursor:pointer;background:var(--bg);border:1px solid var(--border);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);border-radius:10px}
 
-  /* ============================================================
-     HUD — вариант 3 (один дизайн на ПК и мобильном)
-     Слева сверху: вертикальная плашка O₂ + бургер под ней
-     ============================================================ */
+  /* HUD — вариант 3, единый для ПК и мобильного */
   #hudColumn{position:fixed;top:max(14px,env(safe-area-inset-top));left:max(14px,env(safe-area-inset-left));z-index:30;pointer-events:none;padding-top:52px;display:flex;flex-direction:column;gap:10px}
   #hudColumn .hudLeft{display:flex;flex-direction:column;align-items:flex-start;gap:10px;pointer-events:none}
   #hudColumn .hudLeft > *{pointer-events:auto}
@@ -39,7 +36,8 @@
   #hudColumn #hamburger.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
 
   #o2WidePanel{padding:8px 10px;display:flex;flex-direction:column;align-items:center;gap:6px}
-  #o2WidePanel .wLabel{color:var(--text-bright);font-size:10px;letter-spacing:2px;font-weight:700;writing-mode:vertical-rl;text-orientation:upright;transform:rotate(180deg)}
+  #o2WidePanel .wLabel{color:var(--text-bright);font-size:14px;letter-spacing:2px;font-weight:700;font-family:ui-monospace,monospace;line-height:1}
+  #o2WidePanel .wLabel sub{font-size:0.65em;letter-spacing:0;vertical-align:sub;line-height:0;position:relative;top:0.1em}
   #o2WidePanel .wTrack{width:22px;height:190px;border-radius:11px;background:rgba(255,255,255,.10);overflow:hidden;display:flex;flex-direction:column-reverse;box-shadow:inset 0 0 6px rgba(0,0,0,.35)}
   #o2WidePanel .wTrack > div{width:100%;height:100%;background:linear-gradient(0deg,#a89f8c,#f0e8d8);transition:height .3s;border-radius:11px}
   #o2WidePanel .wPct{color:var(--text-bright);font-size:11px;letter-spacing:1px;font-weight:700}
@@ -47,7 +45,7 @@
   #o2WidePanel.danger .wTrack > div{background:linear-gradient(0deg,#6a6258,#b8a890);animation:o2Pulse .8s infinite}
   @keyframes o2Pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-  /* Нижняя панель миссии и очков — по центру низа */
+  /* Нижняя панель миссии и очков */
   #bottomBar{
     position:fixed;left:50%;transform:translateX(-50%);
     bottom:max(20px,calc(env(safe-area-inset-bottom) + 20px));
@@ -89,7 +87,6 @@
   #crosshair::after{top:50%;left:0;width:100%;height:1.5px;transform:translateY(-50%)}
   #crosshair span{position:absolute;left:50%;top:50%;width:4px;height:4px;background:rgba(240,232,216,1);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 8px rgba(0,0,0,.95)}
 
-  /* Кнопка режима — одно слово FLIGHT / WALK */
   #flightBtn{position:fixed;bottom:max(120px,calc(env(safe-area-inset-bottom) + 120px));right:max(20px,env(safe-area-inset-right));z-index:15;width:96px;height:96px;border-radius:50%;background:var(--bg-strong);border:1.5px solid var(--border-strong);color:var(--text-bright);font-size:15px;font-weight:700;letter-spacing:2.5px;cursor:pointer;backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);transition:all .2s;touch-action:manipulation;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.2);font-family:ui-monospace,monospace}
   #flightBtn:active{transform:scale(.92)}
   #flightBtn.flight{background:rgba(216,208,192,.22);border-color:var(--text-bright);box-shadow:0 0 24px rgba(216,208,192,.35)}
@@ -144,7 +141,8 @@
 
   #rocketCam{position:fixed;inset:0;z-index:90;background:#000;display:none;align-items:center;justify-content:center;overflow:hidden}
   #rocketCam.show{display:flex}
-  #rocketCam canvas{position:absolute;inset:0;width:100%!important;height:100%!important}
+  #rocketCam canvas{position:absolute;inset:0;width:100%!important;height:100%!important;cursor:grab;touch-action:none}
+  #rocketCam canvas:active{cursor:grabbing}
 
   @media (max-width:768px){
     #radarWrap{width:200px;height:200px}
@@ -162,7 +160,7 @@
 <div id="hudColumn">
   <div class="hudLeft">
     <div class="panel" id="o2WidePanel">
-      <div class="wLabel">O₂</div>
+      <div class="wLabel">O<sub>2</sub></div>
       <div class="wTrack"><div id="o2WideFill"></div></div>
       <div class="wPct" id="o2BigPercent">100%</div>
     </div>
@@ -175,9 +173,9 @@
     <div class="goal" id="missionGoal">Спасти экипаж и вернуться к ракете</div>
   </div>
   <div class="statsRow">
-    <span>ЭКИПАЖ <span class="v" id="crewStat">0/5</span></span>
+    <span id="lblCrewStat">ЭКИПАЖ <span class="v" id="crewStat">0/5</span></span>
     <span class="sep">·</span>
-    <span>ВРЕМЯ <span class="v" id="timeStat">72:00</span></span>
+    <span id="lblTimeStat">ВРЕМЯ <span class="v" id="timeStat">72:00</span></span>
   </div>
 </div>
 
@@ -311,7 +309,7 @@ const I18N = {
     ovQuote:'«Мы не ищем других. Мы ищем себя — в чужих зеркалах».<br>— Станислав Лем',
     finHeader:'◆ ФИНАЛ',
     goalRescue:'Спасти экипаж и вернуться к ракете', goalReturn:'Добраться до ракеты',
-    progress:'Экипаж',
+    crewStat:'ЭКИПАЖ', timeStat:'ВРЕМЯ',
     toastSaved:'◆ СПАСЁН:', toastSavedDesc:'Экипаж поднят на борт.',
     toastO2:'◆ СКЛАД КИСЛОРОДА', toastO2Desc:'Кислород пополнен до 100%.',
     speakIntro:'Внимание. Найдите пятерых. Пополните кислород. Вернитесь к ракете.',
@@ -339,7 +337,7 @@ const I18N = {
     ovQuote:'«We do not seek others. We seek ourselves — in others\' mirrors».<br>— Stanisław Lem',
     finHeader:'◆ FINALE',
     goalRescue:'Rescue the crew and return to the rocket', goalReturn:'Reach the rocket',
-    progress:'Crew',
+    crewStat:'CREW', timeStat:'TIME',
     toastSaved:'◆ RESCUED:', toastSavedDesc:'Crew aboard.',
     toastO2:'◆ OXYGEN DEPOT', toastO2Desc:'Oxygen refilled to 100%.',
     speakIntro:'Attention. Find five. Refuel oxygen. Return to the rocket.',
@@ -362,7 +360,8 @@ const REGIONS = [
   {id:4,name:'Молодые ударные'},{id:5,name:'Вулканические купола'},{id:6,name:'Тектонические разломы'},{id:7,name:'Смешанный регион'}
 ];
 const REGION_COUNT = 8;
-const CREW_NAMES = ['Инженер Лоу','Вишневский','Пиркс-старший','Пиркс-младший','Оператор связи'];
+// Активные имена экипажа (переводятся)
+let CREW_NAMES = ['Инженер Лоу','Вишневский','Пиркс-старший','Пиркс-младший','Оператор связи'];
 const CREW_SPOTS = [{region:0},{region:1},{region:3},{region:4},{region:7}];
 const O2_SPOTS = [{region:0},{region:2},{region:3},{region:5},{region:6}];
 
@@ -389,9 +388,19 @@ function applyLang(lang){
   document.getElementById('ovQuote').innerHTML = t.ovQuote;
   document.getElementById('ovHintBottom').textContent = t.ovHint;
   document.getElementById('finHeader').textContent = t.finHeader;
+  document.getElementById('lblCrewStat').childNodes[0].textContent = t.crewStat + ' ';
+  document.getElementById('lblTimeStat').childNodes[0].textContent = t.timeStat + ' ';
   document.querySelectorAll('[data-ru][data-en]').forEach(el=>{ el.textContent = el.dataset[lang]; });
-  CREW_NAMES.length = 0;
-  t.crew.forEach(n => CREW_NAMES.push(n));
+
+  // Обновляем список имён экипажа — на английском тоже
+  CREW_NAMES = t.crew.slice();
+  // Обновляем имена у уже созданных объектов на сцене
+  crewItems.forEach((item, i) => { item.userData.name = CREW_NAMES[i]; });
+  // Обновляем открытое инфо-окно, если есть
+  if (infoWindowItem) {
+    document.getElementById('ciName').textContent = infoWindowItem.userData.name;
+  }
+
   REGIONS.forEach((r,i) => r.name = t.regions[i]);
   updateCrewList();
   updateMoveState();
@@ -406,13 +415,10 @@ function playChime(f=520,d=0.6,t='sine',v=0.15){ if (audioCtx.state==='suspended
 function playPanelSwoosh(open){ if (audioCtx.state==='suspended') audioCtx.resume(); const n=audioCtx.currentTime; const o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(open?300:700,n); o.frequency.exponentialRampToValueAtTime(open?700:300,n+0.25); g.gain.setValueAtTime(0,n); g.gain.linearRampToValueAtTime(0.08,n+0.04); g.gain.exponentialRampToValueAtTime(0.001,n+0.3); o.connect(g); g.connect(audioCtx.destination); o.start(n); o.stop(n+0.3); }
 function playWarning(){playChime(220,0.3,'square',0.08);}
 
-// ============================================================
 // Звук «металлический отсек космического корабля»
-// ============================================================
 function playMetalHatch(){
   if (audioCtx.state==='suspended') audioCtx.resume();
   const now = audioCtx.currentTime;
-  // Шум-основа: пневматика + скрип металла + лязг
   const dur = 1.6;
   const bufSize = Math.floor(audioCtx.sampleRate * dur);
   const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
@@ -421,22 +427,16 @@ function playMetalHatch(){
   for (let i=0;i<bufSize;i++){
     const t = i / audioCtx.sampleRate;
     const w = Math.random()*2-1;
-    // Первая половина — пневматика (высокочастотный шум), вторая — глухой металл
-    const env = t < 0.9
-      ? Math.exp(-t*2.2)
-      : Math.exp(-(t-0.9)*4.0);
+    const env = t < 0.9 ? Math.exp(-t*2.2) : Math.exp(-(t-0.9)*4.0);
     l = (l * 0.7 + w * 0.3);
     d[i] = l * env * 0.8;
   }
-  const src = audioCtx.createBufferSource();
-  src.buffer = buf;
+  const src = audioCtx.createBufferSource(); src.buffer = buf;
   const hp = audioCtx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=200;
   const lp = audioCtx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=4200;
   const g = audioCtx.createGain(); g.gain.value=0.55;
   src.connect(hp); hp.connect(lp); lp.connect(g); g.connect(audioCtx.destination);
   src.start(now);
-
-  // Лязг — короткий металлический удар в начале и конце
   function clank(delay, freq, durC, vol){
     const t0 = now + delay;
     const o = audioCtx.createOscillator(), gg = audioCtx.createGain();
@@ -448,16 +448,14 @@ function playMetalHatch(){
     o.connect(gg); gg.connect(audioCtx.destination);
     o.start(t0); o.stop(t0+durC);
   }
-  clank(0.02, 220, 0.5, 0.28);   // открытие
-  clank(1.05, 180, 0.6, 0.30);   // закрытие
+  clank(0.02, 220, 0.5, 0.28);
+  clank(1.05, 180, 0.6, 0.30);
   clank(1.10, 90, 0.7, 0.18);
 }
 function playCrewSaved(){ playMetalHatch(); }
 function playO2Pickup(){ playMetalHatch(); }
 
-// ============================================================
 // Голос — женский робот, с дилеем и помехами
-// ============================================================
 let voiceEnabled = true;
 let voiceNoise = null;
 function initVoiceChain(){
@@ -487,10 +485,8 @@ function pickFemaleVoice(){
   const all = window.speechSynthesis.getVoices();
   const lang = currentLang === 'ru' ? 'ru' : 'en';
   const list = all.filter(v => v.lang && v.lang.startsWith(lang));
-  // Ищем женский голос
   const female = list.filter(v => /(female|woman|milena|alena|katya|irina|elena|anna|victoria|samantha|karen|moira|tessa|zira|susan|linda|allison|joanna|amy|emma|google uk english female|google русский)/i.test(v.name));
   if (female.length) return female[0];
-  // Иначе — любой, кроме мужских ключевых слов
   const notMale = list.filter(v => !/(male|муж|yuri|dmitri|pavel|aleksandr|maxim|david|mark|george|daniel|alex)/i.test(v.name));
   if (notMale.length) return notMale[0];
   return list[0] || all[0] || null;
@@ -517,7 +513,7 @@ function speak(text){
     const u = new SpeechSynthesisUtterance(text);
     u.lang = currentLang === 'ru' ? 'ru-RU' : 'en-US';
     u.rate = 0.78;
-    u.pitch = 1.35;    // выше — «женственный» робот
+    u.pitch = 1.35;
     u.volume = 0.9;
     const v = pickFemaleVoice(); if (v) u.voice = v;
     u.onend = () => { setTimeout(() => setVoiceNoise(false), 250); playChime(880,0.04,'square',0.015); };
@@ -708,7 +704,7 @@ function sampleHeightMax(x, z, r) {
 }
 
 /* ============================================================
-   ЗВЁЗДЫ — 10 групп, одинаково для ПК и мобильного
+   ЗВЁЗДЫ
    ============================================================ */
 function createStarTex(s) {
   const c = document.createElement('canvas'); c.width = c.height = s;
@@ -863,7 +859,7 @@ scene.add(new THREE.HemisphereLight(0x334455, 0x050510, 0.06));
 scene.add(new THREE.AmbientLight(0x0a0a12, 0.06));
 
 /* ============================================================
-   АСТРОНАВТ — детализированный, крупный
+   АСТРОНАВТ
    ============================================================ */
 const A_MATS = {
   suit: new THREE.MeshStandardMaterial({color:0xf5f7fa, roughness:0.92}),
@@ -1402,7 +1398,6 @@ function spawnObjects() {
     o2Items.push(mesh);
   });
 
-  // Стартовая площадка с ракетой и двумя башнями (как в rcScene)
   const flatRocket = findFlatSpot(0, 0, 80);
   rocket.position.set(flatRocket.x, flatRocket.y + 0.15, flatRocket.z);
 
@@ -1741,7 +1736,7 @@ function triggerFailure(reason) {
 window.restartGame = () => showRewardedAd().then(() => location.reload());
 
 /* ============================================================
-   ФИНАЛЬНАЯ СЦЕНА (rocketCam) — с возможностью вращения/приближения
+   ФИНАЛЬНАЯ СЦЕНА — OrbitControls сразу активны
    ============================================================ */
 const rcCanvas = document.getElementById('rcCanvas');
 const rcRenderer = new THREE.WebGLRenderer({canvas:rcCanvas, antialias:true, powerPreference:'high-performance'});
@@ -1759,10 +1754,9 @@ const rcControls = new OrbitControls(rcCamera, rcCanvas);
 rcControls.target.set(0,26,0);
 rcControls.enableDamping = true;
 rcControls.dampingFactor = .055;
-rcControls.minDistance = 12;
+rcControls.minDistance = 6;
 rcControls.maxDistance = 3000;
 rcControls.maxPolarAngle = Math.PI*.497;
-// Сразу разрешаем вращение / зум / перетаскивание
 rcControls.enablePan = true;
 rcControls.enableZoom = true;
 rcControls.enableRotate = true;
@@ -1920,8 +1914,6 @@ let padTimer = 0, padState = 'idle';
 
 function rcKfWrap(keys,t){ if(t<=keys[0][0]) return keys[0][1]; for(let i=0;i<keys.length-1;i++){ const a=keys[i], b=keys[i+1]; if(t<=b[0]){ const u=(t-a[0])/(b[0]-a[0]); const e=u*u*(3-2*u); return a[1]+(b[1]-a[1])*e; } } return keys[keys.length-1][1]; }
 function rcReset(){ rcState='idle'; rcMt=0; rcAlt=0; rcVel=0; rcSep=false; rcLand=[false,false]; rcRocket.position.y=0; rcCoreG.position.set(0,0,0); rcCoreG.rotation.set(0,0,0); rcBoostG.forEach(b=>{b.g.position.set(b.s*3.7,0,0); b.g.rotation.set(0,0,0); b.legs.forEach(l=>l.rotation.z=0);}); rcClamps.forEach(c=>c.rotation.z=0); rcFlameMat.forEach(f=>f.u.uPower.value=0); rcBaseGlow.material.opacity=0; rcGlowBoost.forEach(g=>g.material.opacity=0); for(let i=0;i<rcN;i++){ rcSl[i]=0; rcSA[i]=0; } rcSetRumble(0,120); rcCamera.position.set(78,34,96); rcControls.target.set(0,26,0); }
-// Пользователь может сам менять точку зрения в любой момент — этот счётчик
-// нужен только чтобы не сбрасывать её сразу после запуска.
 rcControls.addEventListener('start',()=>rcUserZoom=performance.now());
 
 let rcLastT=0;
@@ -1945,7 +1937,7 @@ function rcLoop(now){
   }
   if(rcState==='done'){ const bothLanded = rcLand[0] && rcLand[1]; if (bothLanded && !creditsStarted) { creditsStarted = true; const r = document.getElementById('radio'); if (r) { r.pause(); r.currentTime = 0; } document.getElementById('credits').classList.add('show'); showCredits(); } }
   // Автоподстройка камеры во время полёта — только если пользователь сам не начал
-  // управлять камерой. Как только он тронул — перестаём вмешиваться.
+  // управлять камерой (первые 8 секунд). Потом камера полностью под контролем игрока.
   if (rcState==='flight' && performance.now() - rcUserZoom > 8000) {
     const ty = rcKfWrap(rcCamKeys.map(k=>[k[0],k[1]]), Math.min(rcMt, rcT_END));
     const td = rcKfWrap(rcCamKeys.map(k=>[k[0],k[2]]), Math.min(rcMt, rcT_END));
@@ -1963,7 +1955,12 @@ function rcLoop(now){
 function rcResize(){ const r=rcCanvas.getBoundingClientRect(); const w=r.width||innerWidth, h=r.height||innerHeight; rcRenderer.setSize(w,h,false); rcCamera.aspect=w/h; rcCamera.updateProjectionMatrix(); rcComposer.setSize(w,h); rcSMat.uniforms.uPix.value = h*.5/Math.tan(rcCamera.fov*.5*Math.PI/180)*rcRenderer.getPixelRatio(); }
 rcResize(); rcReset(); requestAnimationFrame(rcLoop); addEventListener('resize', rcResize);
 
-function openRocketScene(){ document.getElementById('rocketCam').classList.add('show'); rcResize(); }
+function openRocketScene(){
+  document.getElementById('rocketCam').classList.add('show');
+  // Снимаем pointer-lock, чтобы мышь была свободна для OrbitControls
+  if (document.pointerLockElement) document.exitPointerLock();
+  rcResize();
+}
 function startPadSequence(){
   padState = 'boarding';
   padTimer = 0;
