@@ -24,7 +24,6 @@
 
   #langBtn{position:fixed;top:max(14px,env(safe-area-inset-top));left:max(14px,env(safe-area-inset-left));z-index:130;padding:9px 16px;font-family:ui-monospace,monospace;font-size:12px;color:var(--text-bright);letter-spacing:2px;cursor:pointer;background:var(--bg);border:1px solid var(--border);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);border-radius:10px}
 
-  /* HUD — вариант 3, единый для ПК и мобильного */
   #hudColumn{position:fixed;top:max(14px,env(safe-area-inset-top));left:max(14px,env(safe-area-inset-left));z-index:30;pointer-events:none;padding-top:52px;display:flex;flex-direction:column;gap:10px}
   #hudColumn .hudLeft{display:flex;flex-direction:column;align-items:flex-start;gap:10px;pointer-events:none}
   #hudColumn .hudLeft > *{pointer-events:auto}
@@ -90,7 +89,6 @@
   #flightBtn:active{transform:scale(.92)}
   #flightBtn.flight{background:rgba(216,208,192,.22);border-color:var(--text-bright);box-shadow:0 0 24px rgba(216,208,192,.35)}
 
-  /* Окно при близком подлёте к члену экипажа — только текстовая подсказка */
   #crewInfoWindow{position:fixed;bottom:max(120px,calc(env(safe-area-inset-bottom) + 120px));left:50%;transform:translateX(-50%) translateY(120%);z-index:80;background:var(--bg-strong);border:1px solid var(--border-strong);border-radius:16px;padding:18px 24px;max-width:340px;backdrop-filter:blur(28px) saturate(160%);-webkit-backdrop-filter:blur(28px) saturate(160%);transition:transform .5s cubic-bezier(.2,.9,.3,1),opacity .5s;opacity:0;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.3);text-align:center}
   #crewInfoWindow.show{transform:translateX(-50%) translateY(0);opacity:1}
   #crewInfoWindow .ci-label{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;text-align:center;margin-bottom:8px}
@@ -413,7 +411,6 @@ function playChime(f=520,d=0.6,t='sine',v=0.15){ if (audioCtx.state==='suspended
 function playPanelSwoosh(open){ if (audioCtx.state==='suspended') audioCtx.resume(); const n=audioCtx.currentTime; const o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(open?300:700,n); o.frequency.exponentialRampToValueAtTime(open?700:300,n+0.25); g.gain.setValueAtTime(0,n); g.gain.linearRampToValueAtTime(0.08,n+0.04); g.gain.exponentialRampToValueAtTime(0.001,n+0.3); o.connect(g); g.connect(audioCtx.destination); o.start(n); o.stop(n+0.3); }
 function playWarning(){playChime(220,0.3,'square',0.08);}
 
-// Звук «металлический отсек космического корабля»
 function playMetalHatch(){
   if (audioCtx.state==='suspended') audioCtx.resume();
   const now = audioCtx.currentTime;
@@ -453,7 +450,6 @@ function playMetalHatch(){
 function playCrewSaved(){ playMetalHatch(); }
 function playO2Pickup(){ playMetalHatch(); }
 
-// Голос — женский робот, с дилеем и помехами
 let voiceEnabled = true;
 let voiceNoise = null;
 function initVoiceChain(){
@@ -523,8 +519,7 @@ function speak(text){
 const WORLD_SIZE = 21166, WORLD_HALF = WORLD_SIZE / 2;
 const renderer = new THREE.WebGLRenderer({antialias: true, powerPreference:'high-performance'});
 renderer.setSize(innerWidth, innerHeight);
-// Единый DPR для ПК и мобильного — 3, чтобы звёзды были одинаково крупными
-renderer.setPixelRatio(Math.min(devicePixelRatio, 3));
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -543,7 +538,7 @@ composer.addPass(bloomPass);
 composer.addPass(new OutputPass());
 
 /* ============================================================
-   РЕЛЬЕФ ЛУНЫ — без разницы между ПК и мобильным
+   РЕЛЬЕФ ЛУНЫ
    ============================================================ */
 const craters = [], domes = [], faults = [];
 const CRATER_DEPTH_MULT = 5.0;
@@ -559,7 +554,6 @@ function addDome(x, z, r, height) { domes.push({ x, z, r, height }); }
 function addFault(x, z, len, ang, h, w) { faults.push({ x, z, len, ang, h, w }); }
 
 {
-  // Одинаковое количество кратеров на всех устройствах
   for (let i = 0; i < 8; i++) addCrater((Math.random()-0.5)*WORLD_SIZE, (Math.random()-0.5)*WORLD_SIZE, 1800 + Math.random() * 1800);
   for (let i = 0; i < 30; i++) addCrater((Math.random()-0.5)*WORLD_SIZE, (Math.random()-0.5)*WORLD_SIZE, 500 + Math.random() * 1200);
   for (let i = 0; i < 120; i++) addCrater((Math.random()-0.5)*WORLD_SIZE, (Math.random()-0.5)*WORLD_SIZE, 200 + Math.random() * 400);
@@ -628,7 +622,7 @@ function computeGroundH(x, z) {
 }
 
 /* ============================================================
-   ТЕРРЕЙН — единое разрешение
+   ТЕРРЕЙН
    ============================================================ */
 const TERRAIN_TILES = 3;
 const TERRAIN_RES = 360;
@@ -704,7 +698,7 @@ function sampleHeightMax(x, z, r) {
 }
 
 /* ============================================================
-   ЗВЁЗДЫ — одинаково на ПК и мобильном
+   ЗВЁЗДЫ — ОДИНАКОВЫЕ на ПК и мобильном
    ============================================================ */
 function createStarTex(s) {
   const c = document.createElement('canvas'); c.width = c.height = s;
@@ -720,7 +714,6 @@ function createStarTex(s) {
 }
 const starTex = createStarTex(64);
 const twinkleMaterials = [];
-const STAR_DPR = Math.min(devicePixelRatio, 3);
 function makeTwinkleStars(count, size, colorHex, baseFreq) {
   const geo = new THREE.BufferGeometry();
   const pos = [], col = [], phase = [], freq = [];
@@ -740,18 +733,18 @@ function makeTwinkleStars(count, size, colorHex, baseFreq) {
   geo.setAttribute('aPhase', new THREE.Float32BufferAttribute(phase,1));
   geo.setAttribute('aFreq', new THREE.Float32BufferAttribute(freq,1));
   const mat = new THREE.ShaderMaterial({
-    uniforms: { uTex: { value: starTex }, uSize: { value: size }, uTime: { value: 0 }, uDPR: { value: STAR_DPR } },
+    uniforms: { uTex: { value: starTex }, uSize: { value: size }, uTime: { value: 0 } },
     transparent: true, depthWrite: false, depthTest: true, blending: THREE.AdditiveBlending,
     vertexShader: `
       attribute vec3 aColor; attribute float aPhase; attribute float aFreq;
-      uniform float uSize; uniform float uTime; uniform float uDPR;
+      uniform float uSize; uniform float uTime;
       varying vec3 vColor; varying float vBright;
       void main() {
         vColor = aColor;
         vBright = 0.5 + 0.5 * sin(uTime * aFreq + aPhase);
         vBright = 0.35 + 0.65 * vBright;
         vec4 mv = modelViewMatrix * vec4(position, 1.0);
-        gl_PointSize = uSize * uDPR;
+        gl_PointSize = uSize;
         gl_Position = projectionMatrix * mv;
       }
     `,
@@ -798,7 +791,7 @@ function makeMilkyWayStars() {
   }
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
   geo.setAttribute('color', new THREE.Float32BufferAttribute(col,3));
-  return new THREE.Points(geo, new THREE.PointsMaterial({ size:1.6 * STAR_DPR, map:starTex, transparent:true, opacity:0.9, blending:THREE.AdditiveBlending, depthWrite:false, depthTest:true, sizeAttenuation:false, vertexColors:true }));
+  return new THREE.Points(geo, new THREE.PointsMaterial({ size:1.6, map:starTex, transparent:true, opacity:0.9, blending:THREE.AdditiveBlending, depthWrite:false, depthTest:true, sizeAttenuation:false, vertexColors:true }));
 }
 scene.add(makeMilkyWayStars());
 
@@ -1158,7 +1151,7 @@ for (const s of [-1,1]) { const b = buildCore(false); b.position.x = s*3.7; rock
 scene.add(rocket);
 
 /* ============================================================
-   ДВЕ БАШНИ
+   БАШНИ-ФУНКЦИИ
    ============================================================ */
 function buildTruss(w,h,d,bays,br,mat) {
   const segs = [], hw = w/2, hd = d/2, bh = h/bays;
@@ -1203,6 +1196,144 @@ function buildTowerSmall() {
   g.add(meshRocket(new THREE.BoxGeometry(6.4, 1.5, 1.3), ROCKET_MATS.white, [-4.2, 50.5, 1.2]));
   g.add(meshRocket(new THREE.SphereGeometry(0.55, 12, 10), new THREE.MeshBasicMaterial({color:0xff3a22}), [0, 65.4, 0]));
   return g;
+}
+
+/* ============================================================
+   ПОЛНАЯ СТАРТОВАЯ ПЛОЩАДКА — 1:1 как в rcScene
+   ============================================================ */
+function makePadTex(draw, w=256, h=256){
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  draw(c.getContext('2d'),w,h);
+  const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=8; return t;
+}
+const PAD_CONCRETE_TEX = makePadTex((g,w,h)=>{
+  g.fillStyle='#8d8b85';g.fillRect(0,0,w,h);
+  let d=3;const rn=()=>{d=(d*1103515245+12345)&0x7fffffff;return d/0x7fffffff;};
+  for(let i=0;i<9000;i++){const v=110+rn()*90|0;
+    g.fillStyle=`rgba(${v},${v},${v-4},.14)`;g.fillRect(rn()*w,rn()*h,2+rn()*4,2+rn()*4);}
+  g.strokeStyle='rgba(60,58,54,.35)';g.lineWidth=2;
+  for(let i=0;i<=8;i++){g.beginPath();g.moveTo(i*w/8,0);g.lineTo(i*w/8,h);g.stroke();
+    g.beginPath();g.moveTo(0,i*h/8);g.lineTo(w,i*h/8);g.stroke();}
+},512,512);
+PAD_CONCRETE_TEX.wrapS=PAD_CONCRETE_TEX.wrapT=THREE.RepeatWrapping;
+PAD_CONCRETE_TEX.repeat.set(9,9);
+
+const PAD_GRID_TEX = makePadTex((g,w,h)=>{
+  g.fillStyle='#5b6167';g.fillRect(0,0,w,h);
+  g.strokeStyle='#2c3136';g.lineWidth=Math.max(3,w*.014);
+  for(let i=0;i<=6;i++){const x=i*w/6;g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();}
+  for(let i=0;i<=5;i++){const y=i*h/5;g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}
+  g.strokeStyle='rgba(255,255,255,.16)';g.lineWidth=2;
+  for(let i=0;i<=6;i++){const x=i*w/6;g.beginPath();g.moveTo(x+3,0);g.lineTo(x+3,h);g.stroke();}
+},256,128);
+PAD_GRID_TEX.wrapS=PAD_GRID_TEX.wrapT=THREE.RepeatWrapping;
+
+const PAD_SCORCH_TEX = makePadTex((g,w,h)=>{
+  const r=g.createRadialGradient(w/2,h/2,w*.05,w/2,h/2,w/2);
+  r.addColorStop(0,'rgba(10,8,8,.92)');r.addColorStop(.3,'rgba(28,24,22,.62)');
+  r.addColorStop(.62,'rgba(60,54,48,.26)');r.addColorStop(1,'rgba(80,74,66,0)');
+  g.fillStyle=r;g.fillRect(0,0,w,h);
+},256,256);
+
+const PAD_MATS = {
+  white:new THREE.MeshPhysicalMaterial({color:0xf2f3f1,roughness:.42,metalness:.04,clearcoat:.42,clearcoatRoughness:.5,envMapIntensity:1.15}),
+  white2:new THREE.MeshPhysicalMaterial({color:0xe7e9e7,roughness:.52,metalness:.05,envMapIntensity:1}),
+  black:new THREE.MeshPhysicalMaterial({color:0x15181c,roughness:.38,metalness:.22,clearcoat:.5,envMapIntensity:1.2}),
+  dark:new THREE.MeshStandardMaterial({color:0x3a3f45,roughness:.55,metalness:.62,envMapIntensity:1}),
+  steel:new THREE.MeshStandardMaterial({color:0x8d949b,roughness:.42,metalness:.9,envMapIntensity:1.3}),
+  copper:new THREE.MeshStandardMaterial({color:0x8a5a34,roughness:.34,metalness:.95,envMapIntensity:1.4}),
+  leg:new THREE.MeshPhysicalMaterial({color:0x1b1e22,roughness:.5,metalness:.25,clearcoat:.35}),
+  grid:new THREE.MeshStandardMaterial({map:PAD_GRID_TEX,color:0xb9bec4,roughness:.42,metalness:.92,envMapIntensity:1.4}),
+  red:new THREE.MeshStandardMaterial({color:0xa8281f,roughness:.6,metalness:.1}),
+  pad:new THREE.MeshStandardMaterial({map:PAD_CONCRETE_TEX,color:0xa9a79f,roughness:.94,metalness:0}),
+  dirt:new THREE.MeshStandardMaterial({color:0x2a2a24,roughness:1,metalness:0}),
+  lamp:new THREE.MeshBasicMaterial({color:0xfff4dd}),
+  beacon:new THREE.MeshBasicMaterial({color:0xff3a22})
+};
+function padMesh(geo,mat,pos,rot){
+  const m=new THREE.Mesh(geo,mat);
+  if(pos)m.position.set(pos[0],pos[1],pos[2]);
+  if(rot)m.rotation.set(rot[0],rot[1],rot[2]);
+  m.castShadow=m.receiveShadow=true; return m;
+}
+function buildFullLaunchPad() {
+  const group = new THREE.Group();
+  // Плита
+  group.add(padMesh(new THREE.CylinderGeometry(41,43,3.6,10), PAD_MATS.pad, [0,1.8,0]));
+  group.add(padMesh(new THREE.CircleGeometry(41,64), PAD_MATS.pad, [0,-0.58,0], [-Math.PI/2,0,0]));
+  const scorch = new THREE.Mesh(new THREE.PlaneGeometry(34,34),
+    new THREE.MeshStandardMaterial({map:PAD_SCORCH_TEX,transparent:true,roughness:1,depthWrite:false}));
+  scorch.rotation.x = -Math.PI/2; scorch.position.y = -0.55; scorch.receiveShadow = true;
+  group.add(scorch);
+  group.add(padMesh(new THREE.TorusGeometry(13.5,0.16,6,80),
+    new THREE.MeshStandardMaterial({color:0xd8b62c,roughness:0.7}), [0,-0.5,0], [Math.PI/2,0,0]));
+  for(const sx of [-1,1]){
+    group.add(padMesh(new THREE.RingGeometry(4.2,5.4,40),
+      new THREE.MeshStandardMaterial({color:0xe8e8e4,roughness:0.8,side:THREE.DoubleSide}),
+      [sx*28,-0.52,0],[Math.PI/2,0,0]));
+    group.add(padMesh(new THREE.RingGeometry(1.4,1.9,32),
+      new THREE.MeshStandardMaterial({color:0xc8352a,roughness:0.8,side:THREE.DoubleSide}),
+      [sx*28,-0.51,0],[Math.PI/2,0,0]));
+  }
+  // Стартовый стол
+  const mount = new THREE.Group();
+  mount.add(padMesh(new THREE.CylinderGeometry(4.6,5.4,3.6,24), PAD_MATS.dark, [0,-2.3,0]));
+  mount.add(padMesh(new THREE.CylinderGeometry(4.0,4.6,0.6,24), PAD_MATS.steel, [0,-0.4,0]));
+  for(let i=0;i<4;i++){
+    const a=i/4*Math.PI*2+Math.PI/4, hg=new THREE.Group();
+    hg.rotation.y=a; hg.position.set(Math.sin(a)*3.3,-0.15,Math.cos(a)*3.3);
+    hg.add(padMesh(new RoundedBoxGeometry(2.5,0.55,1.0,0.12), PAD_MATS.steel, [-1.15,0.1,0]));
+    hg.add(padMesh(new THREE.BoxGeometry(0.5,0.9,0.9), PAD_MATS.dark, [-2.3,0.25,0]));
+    mount.add(hg);
+  }
+  mount.add(padMesh(new THREE.BoxGeometry(13,2.2,9), PAD_MATS.dark, [0,-4.6,0]));
+  mount.add(padMesh(new THREE.BoxGeometry(11,0.7,7), PAD_MATS.steel, [0,-3.3,0],[0.22,0,0]));
+  group.add(mount);
+  // Красная стрела
+  const tower = new THREE.Group(); tower.position.set(-21,0,-16);
+  tower.add(buildTruss(13,96,13,16,0.42,PAD_MATS.red));
+  tower.add(padMesh(new THREE.BoxGeometry(15,1.2,15), PAD_MATS.dark, [0,96,0]));
+  for(const y of [24,48,72]) tower.add(padMesh(new THREE.BoxGeometry(15.6,0.7,15.6), PAD_MATS.dark, [0,y,0]));
+  tower.add(padMesh(new THREE.BoxGeometry(14.4,26,2.4), PAD_MATS.white, [-1,60,7.6]));
+  tower.add(padMesh(new THREE.BoxGeometry(14.4,1.6,2.5), PAD_MATS.red, [-1,64,7.65]));
+  tower.add(padMesh(new THREE.BoxGeometry(2.6,2.6,17), PAD_MATS.white, [6.6,57,-1]));
+  tower.add(padMesh(new THREE.SphereGeometry(0.7,12,10), PAD_MATS.beacon, [0,98.2,0]));
+  group.add(tower);
+  // Телеком-мачта
+  const tel = new THREE.Group(); tel.position.set(8.6,0,-4.2);
+  tel.add(buildTruss(4.2,62,4.2,14,0.30,PAD_MATS.white2));
+  tel.add(padMesh(new THREE.BoxGeometry(5.4,3.4,5.4), PAD_MATS.red, [0,63,0]));
+  tel.add(padMesh(new THREE.BoxGeometry(4.8,1.2,4.8), PAD_MATS.dark, [0,-0.4,0]));
+  for(const y of [16,32,48]) tel.add(padMesh(new THREE.BoxGeometry(5,0.6,5), PAD_MATS.dark, [0,y,0]));
+  tel.add(padMesh(new THREE.BoxGeometry(1.4,10,1.4), PAD_MATS.dark, [0,55,-3.2]));
+  tel.add(padMesh(new THREE.BoxGeometry(6.4,1.5,1.3), PAD_MATS.white, [-4.2,50.5,1.2]));
+  tel.add(padMesh(new THREE.SphereGeometry(0.55,12,10), PAD_MATS.beacon, [0,65.4,0]));
+  group.add(tel);
+  // Прожекторы
+  for(let i=0;i<4;i++){
+    const a=i/4*Math.PI*2+0.6, x=Math.cos(a)*54, z=Math.sin(a)*54;
+    const g=new THREE.Group(); g.position.set(x,0,z);
+    g.add(padMesh(new THREE.CylinderGeometry(0.35,0.7,44,10), PAD_MATS.steel, [0,22,0]));
+    g.add(padMesh(new THREE.BoxGeometry(3.2,1.6,1.2), PAD_MATS.dark, [0,44.6,0]));
+    for(let k=0;k<3;k++) g.add(padMesh(new THREE.BoxGeometry(0.9,0.7,0.3), PAD_MATS.lamp, [-1+k,44.6,0.7]));
+    group.add(g);
+  }
+  // VAB
+  const vab = new THREE.Group(); vab.position.set(1150,0,-1750);
+  vab.add(padMesh(new THREE.BoxGeometry(160,158,190), PAD_MATS.white2, [0,79,0]));
+  vab.add(padMesh(new THREE.BoxGeometry(170,12,200), PAD_MATS.dark, [0,162,0]));
+  vab.add(padMesh(new THREE.BoxGeometry(60,90,4), PAD_MATS.red, [0,60,96]));
+  group.add(vab);
+  // Молниеотводы
+  for(let i=0;i<3;i++){
+    const a=i/3*Math.PI*2+1.1, x=Math.cos(a)*430, z=Math.sin(a)*430;
+    const g=new THREE.Group(); g.position.set(x,0,z);
+    g.add(padMesh(new THREE.CylinderGeometry(0.5,2.6,150,8), PAD_MATS.steel, [0,75,0]));
+    g.add(padMesh(new THREE.CylinderGeometry(0.2,0.5,14,6), PAD_MATS.steel, [0,157,0]));
+    g.add(padMesh(new THREE.SphereGeometry(1.1,10,8), PAD_MATS.beacon, [0,164,0]));
+    group.add(g);
+  }
+  return group;
 }
 
 /* ============================================================
@@ -1396,18 +1527,15 @@ function spawnObjects() {
     o2Items.push(mesh);
   });
 
-  const flatRocket = findFlatSpot(0, 0, 80);
-  rocket.position.set(flatRocket.x, flatRocket.y + 0.15, flatRocket.z);
+  // Полная стартовая площадка 1:1 как в rcScene
+  const pad = buildFullLaunchPad();
+  const padY = sampleHeight(0, 0) + 0.15;
+  pad.position.set(0, padY, 0);
+  scene.add(pad);
 
-  const towerA = buildTowerBig();
-  const flatA = findFlatSpot(flatRocket.x - 21, flatRocket.z - 16, 40);
-  towerA.position.set(flatA.x, flatA.y + 0.15, flatA.z);
-  scene.add(towerA);
-
-  const towerB = buildTowerSmall();
-  const flatB = findFlatSpot(flatRocket.x + 8.6, flatRocket.z - 4.2, 40);
-  towerB.position.set(flatB.x, flatB.y + 0.15, flatB.z);
-  scene.add(towerB);
+  // Ракета в центре площадки
+  rocket.position.set(0, padY, 0);
+  rocket.rotation.set(0, 0, 0);
 }
 spawnObjects();
 
@@ -1483,7 +1611,7 @@ document.getElementById('panelClose').addEventListener('click', () => togglePane
 const minimapCanvas = document.getElementById('minimapCanvas');
 const mmCtx = minimapCanvas.getContext('2d');
 let mmSize = 280;
-const mmDpr = Math.min(devicePixelRatio, 3);
+const mmDpr = Math.min(devicePixelRatio, 2);
 const MINIMAP_RANGE = 4000;
 function resizeMinimap() {
   const rect = minimapCanvas.getBoundingClientRect();
@@ -1672,7 +1800,7 @@ window.restartGame = () => showRewardedAd().then(() => location.reload());
    ============================================================ */
 const rcCanvas = document.getElementById('rcCanvas');
 const rcRenderer = new THREE.WebGLRenderer({canvas:rcCanvas, antialias:true, powerPreference:'high-performance'});
-rcRenderer.setPixelRatio(Math.min(devicePixelRatio, 3));
+rcRenderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 rcRenderer.shadowMap.enabled = true;
 rcRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
 rcRenderer.toneMapping = THREE.ACESFilmicToneMapping;
