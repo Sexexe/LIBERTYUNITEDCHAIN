@@ -24,25 +24,42 @@
 
   #langBtn{position:fixed;top:max(14px,env(safe-area-inset-top));left:max(14px,env(safe-area-inset-left));z-index:120;padding:9px 16px;font-family:ui-monospace,monospace;font-size:12px;color:var(--text-bright);letter-spacing:2px;cursor:pointer;background:var(--bg);border:1px solid var(--border);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);border-radius:10px}
 
-  /* Панели слева — аккуратные, полупрозрачные, не перекрывают друг друга */
-  #hudColumn{position:fixed;top:max(14px,env(safe-area-inset-top));left:max(14px,env(safe-area-inset-left));z-index:30;display:flex;flex-direction:column;gap:10px;width:240px;max-width:44vw;pointer-events:none;padding-top:52px}
-  #hudColumn > *{pointer-events:auto}
-  #hudColumn .panel{padding:12px 16px;border-radius:14px;background:var(--bg);border:1px solid var(--border);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);box-shadow:0 4px 22px rgba(0,0,0,.28);font-family:ui-monospace,monospace}
-  #o2Panel .label{color:var(--text-dim);font-size:10px;letter-spacing:2px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
-  #o2Panel .label .pct{color:var(--text-bright);font-size:13px;font-weight:600;letter-spacing:1px}
-  #o2Panel .bar{margin-top:9px;height:10px;border-radius:5px;background:rgba(255,255,255,.09);overflow:hidden}
-  #o2Panel .bar > div{height:100%;width:100%;background:linear-gradient(90deg,#a89f8c,#f0e8d8);transition:width .3s;border-radius:5px}
-  #o2Panel.warn .bar > div{background:linear-gradient(90deg,#8a8278,#d0c8b8)}
-  #o2Panel.danger .bar > div{background:linear-gradient(90deg,#6a6258,#b8a890);animation:o2Pulse .8s infinite}
-  @keyframes o2Pulse{0%,100%{opacity:1}50%{opacity:.4}}
-  #missionPanel .goal{color:var(--text-bright);font-size:11px;font-weight:600;letter-spacing:.5px;line-height:1.4}
-  #missionPanel .progress{color:var(--text-dim);font-size:10px;margin-top:6px;letter-spacing:1px}
+  /* ============================================================
+     HUD — вариант 3 (один дизайн на ПК и мобильном)
+     Слева сверху: вертикальная плашка O₂ + бургер под ней
+     ============================================================ */
+  #hudColumn{position:fixed;top:max(14px,env(safe-area-inset-top));left:max(14px,env(safe-area-inset-left));z-index:30;pointer-events:none;padding-top:52px;display:flex;flex-direction:column;gap:10px}
+  #hudColumn .hudLeft{display:flex;flex-direction:column;align-items:flex-start;gap:10px;pointer-events:none}
+  #hudColumn .hudLeft > *{pointer-events:auto}
+  #hudColumn .panel{border-radius:12px;background:var(--bg);border:1px solid var(--border);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);box-shadow:0 4px 22px rgba(0,0,0,.28);font-family:ui-monospace,monospace}
+  #hudColumn #hamburger{width:44px;height:44px;background:var(--bg);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;cursor:pointer;backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);pointer-events:auto}
+  #hudColumn #hamburger span{display:block;width:18px;height:1.5px;background:var(--text);border-radius:2px;transition:all .2s}
+  #hudColumn #hamburger.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+  #hudColumn #hamburger.open span:nth-child(2){opacity:0}
+  #hudColumn #hamburger.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
 
-  #hamburger{width:44px;height:44px;background:var(--bg);border:1px solid var(--border);border-radius:12px;display:none;align-items:center;justify-content:center;flex-direction:column;gap:5px;cursor:pointer;backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%)}
-  #hamburger span{display:block;width:18px;height:1.5px;background:var(--text);border-radius:2px}
-  #hamburger.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
-  #hamburger.open span:nth-child(2){opacity:0}
-  #hamburger.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+  #o2WidePanel{padding:8px 10px;display:flex;flex-direction:column;align-items:center;gap:6px}
+  #o2WidePanel .wLabel{color:var(--text-bright);font-size:10px;letter-spacing:2px;font-weight:700;writing-mode:vertical-rl;text-orientation:upright;transform:rotate(180deg)}
+  #o2WidePanel .wTrack{width:22px;height:190px;border-radius:11px;background:rgba(255,255,255,.10);overflow:hidden;display:flex;flex-direction:column-reverse;box-shadow:inset 0 0 6px rgba(0,0,0,.35)}
+  #o2WidePanel .wTrack > div{width:100%;height:100%;background:linear-gradient(0deg,#a89f8c,#f0e8d8);transition:height .3s;border-radius:11px}
+  #o2WidePanel .wPct{color:var(--text-bright);font-size:11px;letter-spacing:1px;font-weight:700}
+  #o2WidePanel.warn .wTrack > div{background:linear-gradient(0deg,#8a8278,#d0c8b8)}
+  #o2WidePanel.danger .wTrack > div{background:linear-gradient(0deg,#6a6258,#b8a890);animation:o2Pulse .8s infinite}
+  @keyframes o2Pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  /* Нижняя панель миссии и очков — по центру низа */
+  #bottomBar{
+    position:fixed;left:50%;transform:translateX(-50%);
+    bottom:max(20px,calc(env(safe-area-inset-bottom) + 20px));
+    z-index:25;pointer-events:none;
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    max-width:92vw;font-family:ui-monospace,monospace;text-align:center;
+  }
+  #bottomBar .goalPanel{padding:8px 18px;border-radius:12px;background:var(--bg);border:1px solid var(--border);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);box-shadow:0 4px 22px rgba(0,0,0,.28)}
+  #bottomBar .goal{color:var(--text-bright);font-size:11px;font-weight:600;letter-spacing:.6px;line-height:1.3}
+  #bottomBar .statsRow{display:flex;align-items:center;gap:14px;padding:6px 16px;border-radius:10px;background:var(--bg);border:1px solid var(--border);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);box-shadow:0 4px 22px rgba(0,0,0,.28);font-size:10px;letter-spacing:1.2px;color:var(--text-dim)}
+  #bottomBar .statsRow .v{color:var(--text-bright);font-weight:700;letter-spacing:.5px}
+  #bottomBar .statsRow .sep{color:var(--text-dim);opacity:.55}
 
   #sidePanel{position:fixed;top:0;left:0;height:100%;width:320px;max-width:88vw;background:linear-gradient(180deg,rgba(28,26,22,.85),rgba(18,16,14,.92));border-right:1px solid var(--border);z-index:18;transform:translateX(-105%);transition:transform .45s cubic-bezier(.2,.9,.3,1);backdrop-filter:blur(28px) saturate(160%);-webkit-backdrop-filter:blur(28px) saturate(160%);padding:24px;padding-top:max(80px,calc(env(safe-area-inset-top) + 80px));overflow-y:auto}
   #sidePanel.open{transform:translateX(0)}
@@ -64,7 +81,6 @@
   #sidePanel .markerRow .info .dist{color:var(--text-dim);font-family:ui-monospace,monospace;font-size:10px;margin-top:2px}
   #panelClose{position:absolute;top:max(18px,env(safe-area-inset-top));right:18px;background:transparent;border:none;color:var(--text);font-size:26px;cursor:pointer;padding:8px}
 
-  /* Радар в центре экрана, совмещён с крестом */
   #radarWrap{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:14;width:280px;height:280px;pointer-events:none}
   #minimapCanvas{display:block;width:100%;height:100%}
   #crosshair{position:fixed;top:50%;left:50%;width:36px;height:36px;transform:translate(-50%,-50%);pointer-events:none;z-index:15}
@@ -73,18 +89,16 @@
   #crosshair::after{top:50%;left:0;width:100%;height:1.5px;transform:translateY(-50%)}
   #crosshair span{position:absolute;left:50%;top:50%;width:4px;height:4px;background:rgba(240,232,216,1);border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 8px rgba(0,0,0,.95)}
 
-  #flightBtn{position:fixed;bottom:max(28px,calc(env(safe-area-inset-bottom) + 28px));right:max(20px,env(safe-area-inset-right));z-index:15;width:96px;height:96px;border-radius:50%;background:var(--bg-strong);border:1.5px solid var(--border-strong);color:var(--text-bright);font-size:11px;font-weight:700;letter-spacing:1.5px;cursor:pointer;backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);transition:all .2s;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.2);font-family:ui-monospace,monospace}
-  #flightBtn .mode{font-size:14px;letter-spacing:2px;color:var(--text-bright);margin-bottom:2px}
-  #flightBtn .hint{font-size:8px;letter-spacing:1px;color:var(--text-dim);opacity:.7}
+  /* Кнопка режима — одно слово FLIGHT / WALK */
+  #flightBtn{position:fixed;bottom:max(120px,calc(env(safe-area-inset-bottom) + 120px));right:max(20px,env(safe-area-inset-right));z-index:15;width:96px;height:96px;border-radius:50%;background:var(--bg-strong);border:1.5px solid var(--border-strong);color:var(--text-bright);font-size:15px;font-weight:700;letter-spacing:2.5px;cursor:pointer;backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);transition:all .2s;touch-action:manipulation;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.2);font-family:ui-monospace,monospace}
   #flightBtn:active{transform:scale(.92)}
   #flightBtn.flight{background:rgba(216,208,192,.22);border-color:var(--text-bright);box-shadow:0 0 24px rgba(216,208,192,.35)}
 
-  /* Полноэкранный вид астронавта в полный рост */
   #crewBigView{position:fixed;inset:0;z-index:75;pointer-events:none;opacity:0;transition:opacity .5s;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at center,rgba(20,18,15,.85) 0%,rgba(0,0,0,.95) 70%)}
   #crewBigView.show{opacity:1}
   #crewBigView canvas{position:absolute;inset:0;width:100%!important;height:100%!important}
 
-  #crewInfoWindow{position:fixed;bottom:max(28px,calc(env(safe-area-inset-bottom) + 28px));left:50%;transform:translateX(-50%) translateY(120%);z-index:80;background:var(--bg-strong);border:1px solid var(--border-strong);border-radius:16px;padding:18px 24px;max-width:340px;backdrop-filter:blur(28px) saturate(160%);-webkit-backdrop-filter:blur(28px) saturate(160%);transition:transform .5s cubic-bezier(.2,.9,.3,1),opacity .5s;opacity:0;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.3);text-align:center}
+  #crewInfoWindow{position:fixed;bottom:max(120px,calc(env(safe-area-inset-bottom) + 120px));left:50%;transform:translateX(-50%) translateY(120%);z-index:80;background:var(--bg-strong);border:1px solid var(--border-strong);border-radius:16px;padding:18px 24px;max-width:340px;backdrop-filter:blur(28px) saturate(160%);-webkit-backdrop-filter:blur(28px) saturate(160%);transition:transform .5s cubic-bezier(.2,.9,.3,1),opacity .5s;opacity:0;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.3);text-align:center}
   #crewInfoWindow.show{transform:translateX(-50%) translateY(0);opacity:1}
   #crewInfoWindow .ci-label{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;text-align:center;margin-bottom:8px}
   #crewInfoWindow .ci-name{font-size:20px;color:var(--text-bright);text-align:center;font-weight:600;margin-bottom:10px;letter-spacing:.5px}
@@ -133,18 +147,11 @@
   #rocketCam canvas{position:absolute;inset:0;width:100%!important;height:100%!important}
 
   @media (max-width:768px){
-    #hudColumn{width:auto;max-width:none;left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));top:max(52px,calc(env(safe-area-inset-top) + 52px));padding-top:0}
-    #langBtn{top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));padding:8px 14px;font-size:11px}
-    #hamburger{display:flex;width:40px;height:40px}
     #radarWrap{width:200px;height:200px}
-    #flightBtn{width:82px;height:82px;font-size:10px;right:max(12px,env(safe-area-inset-right));bottom:max(16px,calc(env(safe-area-inset-bottom) + 16px))}
-    #flightBtn .mode{font-size:12px}
-    #flightBtn .hint{font-size:7px}
-    #crewInfoWindow{left:8px;right:8px;max-width:none;transform:translateY(120%);bottom:max(16px,calc(env(safe-area-inset-bottom) + 16px))}
-    #crewInfoWindow.show{transform:translateY(0)}
-    #ovTopInfo{padding:max(20px,calc(env(safe-area-inset-top) + 20px)) 16px 0;gap:10px}
-    #ovTopInfo .goal{font-size:11px}
-    #ovTopInfo .legend{font-size:11px;gap:12px}
+    #flightBtn{width:82px;height:82px;font-size:13px;bottom:max(140px,calc(env(safe-area-inset-bottom) + 140px))}
+    #bottomBar .goal{font-size:10px}
+    #bottomBar .statsRow{font-size:9px;gap:10px;padding:5px 12px}
+    #crewInfoWindow{bottom:max(140px,calc(env(safe-area-inset-bottom) + 140px))}
   }
 </style>
 </head>
@@ -153,15 +160,25 @@
 <button id="langBtn">RU</button>
 
 <div id="hudColumn">
-  <div class="panel" id="o2Panel">
-    <div class="label"><span>O₂</span><span class="pct" id="o2BigPercent">100%</span></div>
-    <div class="bar"><div id="o2BigFill" style="width:100%"></div></div>
+  <div class="hudLeft">
+    <div class="panel" id="o2WidePanel">
+      <div class="wLabel">O₂</div>
+      <div class="wTrack"><div id="o2WideFill"></div></div>
+      <div class="wPct" id="o2BigPercent">100%</div>
+    </div>
+    <div id="hamburger"><span></span><span></span><span></span></div>
   </div>
-  <div class="panel" id="missionPanel">
+</div>
+
+<div id="bottomBar">
+  <div class="goalPanel">
     <div class="goal" id="missionGoal">Спасти экипаж и вернуться к ракете</div>
-    <div class="progress" id="missionProgress">Экипаж 0/5 · 72:00</div>
   </div>
-  <div id="hamburger"><span></span><span></span><span></span></div>
+  <div class="statsRow">
+    <span>ЭКИПАЖ <span class="v" id="crewStat">0/5</span></span>
+    <span class="sep">·</span>
+    <span>ВРЕМЯ <span class="v" id="timeStat">72:00</span></span>
+  </div>
 </div>
 
 <div id="sidePanel">
@@ -179,7 +196,6 @@
   <div class="markerRow"><div class="dot red"></div><div class="info"><div class="title" id="lblCrewNear">Ближайший член экипажа</div><div class="dist" id="crewDist">—</div></div></div>
   <div class="markerRow"><div class="dot blue"></div><div class="info"><div class="title" id="lblO2Near">Ближайший склад O₂</div><div class="dist" id="o2Dist">—</div></div></div>
   <div class="divider"></div>
-  <button id="voiceBtn2">🔊 ГОЛОС: ВКЛ</button>
   <button id="musicBtn2">🎵 MISSION CONTROL</button>
 </div>
 
@@ -221,10 +237,9 @@
 <div id="logMessage" class="hidden"><span class="prefix" id="logPrefix"></span><span id="logText"></span></div>
 <div id="finalModal" class="modal hidden"><div class="modal-content"><h3 id="finHeader">◆ ФИНАЛ</h3><div id="finalText"></div><div id="finalChoices" style="text-align:center;margin-top:20px"></div></div></div>
 
-<button id="flightBtn" class="flight"><span class="mode" id="flightMode">FLIGHT</span><span class="hint" id="flightHint">ПКМ — переключить</span></button>
+<button id="flightBtn" class="flight">FLIGHT</button>
 <audio id="radio" loop crossorigin="anonymous"><source src="https://ice1.somafm.com/missioncontrol-128-mp3" type="audio/mpeg"></audio>
 <audio id="mobyTrack" src="moby.mp3" preload="auto" loop></audio>
-<audio id="mobyMenu" src="moby.mp3" preload="auto" loop></audio>
 
 <div id="rocketCam"><canvas id="rcCanvas"></canvas></div>
 
@@ -261,21 +276,15 @@ let vkBridgeReady = false, myVkId = null, myVkName = 'Гость';
 })();
 async function showRewardedAd(){ if (!vkBridgeReady) return true; try { const r = await vkBridge.send('VKWebAppShowNativeAds',{ad_format:'reward'}); return !!r.result; } catch(e){ return false; } }
 
-// ============================================================
-// Межстраничная реклама каждые 15 минут
-// ============================================================
 let interstitialTimer = null;
 let interstitialStarted = false;
 async function showInterstitialAd() {
   if (!vkBridgeReady) return;
-  try {
-    await vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' });
-  } catch(e) { /* тихо игнорируем — VK сам блокирует слишком частые показы */ }
+  try { await vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' }); } catch(e) {}
 }
 function startInterstitialAds() {
   if (interstitialStarted) return;
   interstitialStarted = true;
-  // Первый показ через 15 минут после старта игры
   interstitialTimer = setInterval(async () => {
     const rocketShowing  = document.getElementById('rocketCam').classList.contains('show');
     const creditsShowing = document.getElementById('credits').classList.contains('show');
@@ -294,7 +303,6 @@ const I18N = {
     logHeader:'◆ БОРТОВОЙ ЖУРНАЛ', saved:'Спасено', oxygen:'Кислород', time:'Время', region:'Регион',
     crewHeader:'◆ ЭКИПАЖ «ПИРКС»', navHeader:'◆ НАВИГАЦИЯ',
     crewNear:'Ближайший член экипажа', o2Near:'Ближайший склад O₂',
-    voiceOn:'🔊 ГОЛОС: ВКЛ', voiceOff:'🔊 ГОЛОС: ВЫКЛ',
     music:'🎵 MISSION CONTROL',
     ciLabel:'◆ ЧЛЕН ЭКИПАЖА', ciStatus:'Состояние: <b>жив</b><br>Ожидает эвакуации',
     ovTitle:'LUNAR ODYSSEY', ovSub:'П И Р К С',
@@ -306,7 +314,7 @@ const I18N = {
     progress:'Экипаж',
     toastSaved:'◆ СПАСЁН:', toastSavedDesc:'Экипаж поднят на борт.',
     toastO2:'◆ СКЛАД КИСЛОРОДА', toastO2Desc:'Кислород пополнен до 100%.',
-    speakIntro:'Внимание. Найдите пятерых, пополните кислород и вернитесь к ракете. FLIGHT — быстро, WALK — пешком.',
+    speakIntro:'Внимание. Найдите пятерых. Пополните кислород. Вернитесь к ракете.',
     speakSaved:'Спасён ',
     speakO2:'Кислород пополнен.',
     speakFindRocket:'Экипаж в сборе. Идите к ракете.',
@@ -316,15 +324,13 @@ const I18N = {
     failO2:'Кислород кончился.<br><br>Миссия провалена.',
     failTime:'Ракета улетела.<br><br>Миссия провалена.',
     regions:['Южное нагорье','Моря','Поля','Древние кратеры','Молодые ударные','Вулканические купола','Тектонические разломы','Смешанный регион'],
-    crew:['Инженер Лоу','Вишневский','Пиркс-старший','Пиркс-младший','Оператор связи'],
-    hintSwitch:'ПКМ — переключить'
+    crew:['Инженер Лоу','Вишневский','Пиркс-старший','Пиркс-младший','Оператор связи']
   },
   en: {
     flight:'FLIGHT', walk:'WALK',
     logHeader:'◆ FLIGHT LOG', saved:'Rescued', oxygen:'Oxygen', time:'Time', region:'Region',
     crewHeader:'◆ CREW «PIRX»', navHeader:'◆ NAVIGATION',
     crewNear:'Nearest crew member', o2Near:'Nearest O₂ depot',
-    voiceOn:'🔊 VOICE: ON', voiceOff:'🔊 VOICE: OFF',
     music:'🎵 MISSION CONTROL',
     ciLabel:'◆ CREW MEMBER', ciStatus:'Status: <b>alive</b><br>Awaiting evacuation',
     ovTitle:'LUNAR ODYSSEY', ovSub:'P I R X',
@@ -336,18 +342,17 @@ const I18N = {
     progress:'Crew',
     toastSaved:'◆ RESCUED:', toastSavedDesc:'Crew aboard.',
     toastO2:'◆ OXYGEN DEPOT', toastO2Desc:'Oxygen refilled to 100%.',
-    speakIntro:'Attention. Find five crew, refuel oxygen, return to the rocket. FLIGHT is fast, WALK on foot.',
+    speakIntro:'Attention. Find five. Refuel oxygen. Return to the rocket.',
     speakSaved:'Rescued ',
     speakO2:'Oxygen refilled.',
-    speakFindRocket:'Crew is complete. Head to the rocket.',
+    speakFindRocket:'Crew complete. Head to the rocket.',
     speakBoarding:'Launch.',
     finaleText:'All five are aboard. Hatch closed. System engaged.<br><br>Countdown. Three. Two. One.<br><br>The Moon falls away. Earth rises.<br><br>You saved the crew. All five of them.',
     finaleEnd:'— THE END —', restart:'RESTART',
     failO2:'Oxygen depleted.<br><br>Mission failed.',
     failTime:'The rocket has left.<br><br>Mission failed.',
     regions:['Southern Highlands','Maria','Plains','Ancient Craters','Young Impacts','Volcanic Domes','Tectonic Rifts','Mixed Region'],
-    crew:['Engineer Lowe','Vishnevsky','Pirx Sr.','Pirx Jr.','Comms Operator'],
-    hintSwitch:'RMB — switch'
+    crew:['Engineer Lowe','Vishnevsky','Pirx Sr.','Pirx Jr.','Comms Operator']
   }
 };
 const T = () => I18N[currentLang];
@@ -375,7 +380,6 @@ function applyLang(lang){
   document.getElementById('navHeader').textContent = t.navHeader;
   document.getElementById('lblCrewNear').textContent = t.crewNear;
   document.getElementById('lblO2Near').textContent = t.o2Near;
-  document.getElementById('voiceBtn2').innerHTML = voiceEnabled ? t.voiceOn : t.voiceOff;
   document.getElementById('musicBtn2').innerHTML = t.music;
   document.getElementById('ciLabel').textContent = t.ciLabel;
   document.getElementById('ciStatus').innerHTML = t.ciStatus;
@@ -389,7 +393,6 @@ function applyLang(lang){
   CREW_NAMES.length = 0;
   t.crew.forEach(n => CREW_NAMES.push(n));
   REGIONS.forEach((r,i) => r.name = t.regions[i]);
-  document.getElementById('flightHint').textContent = t.hintSwitch;
   updateCrewList();
   updateMoveState();
   updateHUD();
@@ -398,23 +401,130 @@ function applyLang(lang){
 }
 document.getElementById('langBtn').addEventListener('click', () => applyLang(currentLang === 'ru' ? 'en' : 'ru'));
 
-let menuMusicStarted = false;
-function startMenuMusic(){ if (menuMusicStarted) return; menuMusicStarted = true; const m = document.getElementById('mobyMenu'); if (!m) return; m.volume = 1.0; m.play().catch(()=>{}); }
-['click','touchstart','keydown','pointerdown'].forEach(ev=>document.addEventListener(ev, startMenuMusic, { once:true, passive:true }));
-
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function playChime(f=520,d=0.6,t='sine',v=0.15){ if (audioCtx.state==='suspended') audioCtx.resume(); const n=audioCtx.currentTime; const o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.type=t; o.frequency.value=f; g.gain.setValueAtTime(0,n); g.gain.linearRampToValueAtTime(v,n+0.02); g.gain.exponentialRampToValueAtTime(0.001,n+d); o.connect(g); g.connect(audioCtx.destination); o.start(n); o.stop(n+d); }
 function playPanelSwoosh(open){ if (audioCtx.state==='suspended') audioCtx.resume(); const n=audioCtx.currentTime; const o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(open?300:700,n); o.frequency.exponentialRampToValueAtTime(open?700:300,n+0.25); g.gain.setValueAtTime(0,n); g.gain.linearRampToValueAtTime(0.08,n+0.04); g.gain.exponentialRampToValueAtTime(0.001,n+0.3); o.connect(g); g.connect(audioCtx.destination); o.start(n); o.stop(n+0.3); }
-function playCrewSaved(){playChime(523,0.4,'triangle');setTimeout(()=>playChime(659,0.4,'triangle'),150);setTimeout(()=>playChime(784,0.6,'triangle'),300);}
-function playO2Pickup(){playChime(440,0.3,'sine');setTimeout(()=>playChime(660,0.4,'sine'),100);}
 function playWarning(){playChime(220,0.3,'square',0.08);}
 
+// ============================================================
+// Звук «металлический отсек космического корабля»
+// ============================================================
+function playMetalHatch(){
+  if (audioCtx.state==='suspended') audioCtx.resume();
+  const now = audioCtx.currentTime;
+  // Шум-основа: пневматика + скрип металла + лязг
+  const dur = 1.6;
+  const bufSize = Math.floor(audioCtx.sampleRate * dur);
+  const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  let l = 0;
+  for (let i=0;i<bufSize;i++){
+    const t = i / audioCtx.sampleRate;
+    const w = Math.random()*2-1;
+    // Первая половина — пневматика (высокочастотный шум), вторая — глухой металл
+    const env = t < 0.9
+      ? Math.exp(-t*2.2)
+      : Math.exp(-(t-0.9)*4.0);
+    l = (l * 0.7 + w * 0.3);
+    d[i] = l * env * 0.8;
+  }
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  const hp = audioCtx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=200;
+  const lp = audioCtx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=4200;
+  const g = audioCtx.createGain(); g.gain.value=0.55;
+  src.connect(hp); hp.connect(lp); lp.connect(g); g.connect(audioCtx.destination);
+  src.start(now);
+
+  // Лязг — короткий металлический удар в начале и конце
+  function clank(delay, freq, durC, vol){
+    const t0 = now + delay;
+    const o = audioCtx.createOscillator(), gg = audioCtx.createGain();
+    o.type = 'triangle'; o.frequency.setValueAtTime(freq, t0);
+    o.frequency.exponentialRampToValueAtTime(freq*0.4, t0+durC);
+    gg.gain.setValueAtTime(0, t0);
+    gg.gain.linearRampToValueAtTime(vol, t0+0.008);
+    gg.gain.exponentialRampToValueAtTime(0.001, t0+durC);
+    o.connect(gg); gg.connect(audioCtx.destination);
+    o.start(t0); o.stop(t0+durC);
+  }
+  clank(0.02, 220, 0.5, 0.28);   // открытие
+  clank(1.05, 180, 0.6, 0.30);   // закрытие
+  clank(1.10, 90, 0.7, 0.18);
+}
+function playCrewSaved(){ playMetalHatch(); }
+function playO2Pickup(){ playMetalHatch(); }
+
+// ============================================================
+// Голос — женский робот, с дилеем и помехами
+// ============================================================
 let voiceEnabled = true;
-let voiceNoise = null, voiceBus = null;
-function initVoiceChain(){ if (voiceBus) return; try { voiceBus = audioCtx.createGain(); voiceBus.gain.value = 1.0; const bufSize = audioCtx.sampleRate * 2; const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate); const d = buf.getChannelData(0); for (let i=0;i<bufSize;i++) d[i] = (Math.random()*2-1)*0.5; const src = audioCtx.createBufferSource(); src.buffer = buf; src.loop = true; const hp = audioCtx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=1800; const lp = audioCtx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=4200; voiceNoise = audioCtx.createGain(); voiceNoise.gain.value = 0.0; src.connect(hp); hp.connect(lp); lp.connect(voiceNoise); voiceNoise.connect(audioCtx.destination); src.start(); } catch(e){} }
-function setVoiceNoise(active){ if (!voiceNoise) return; const now = audioCtx.currentTime; voiceNoise.gain.cancelScheduledValues(now); voiceNoise.gain.linearRampToValueAtTime(active ? 0.012 : 0, now + 0.25); }
-function pickVoice(){ if (!('speechSynthesis' in window)) return null; const all = window.speechSynthesis.getVoices(); const lang = currentLang === 'ru' ? 'ru' : 'en'; const list = all.filter(v => v.lang && v.lang.startsWith(lang)); const male = list.filter(v => /(male|муж|yuri|dmitri|pavel|aleksandr|maxim)/i.test(v.name)); if (male.length) return male[0]; return list[0] || all[0] || null; }
-function speak(text){ if (!voiceEnabled || !('speechSynthesis' in window)) return; window.speechSynthesis.cancel(); initVoiceChain(); playChime(880,0.06,'square',0.03); setTimeout(() => { setVoiceNoise(true); const utter = new SpeechSynthesisUtterance(text); utter.lang = currentLang === 'ru' ? 'ru-RU' : 'en-US'; utter.rate = 0.9; utter.pitch = 0.75; utter.volume = 0.95; const voice = pickVoice(); if (voice) utter.voice = voice; utter.onend = () => { setTimeout(() => setVoiceNoise(false), 300); playChime(880,0.05,'square',0.02); }; utter.onerror = () => setVoiceNoise(false); window.speechSynthesis.speak(utter); }, 250); }
+let voiceNoise = null;
+function initVoiceChain(){
+  if (voiceNoise) return;
+  try {
+    const bufSize = audioCtx.sampleRate * 2;
+    const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i=0;i<bufSize;i++) d[i] = (Math.random()*2-1) * 0.5;
+    const src = audioCtx.createBufferSource(); src.buffer = buf; src.loop = true;
+    const hp = audioCtx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=1400;
+    const lp = audioCtx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=4500;
+    voiceNoise = audioCtx.createGain(); voiceNoise.gain.value = 0.0;
+    src.connect(hp); hp.connect(lp); lp.connect(voiceNoise);
+    voiceNoise.connect(audioCtx.destination);
+    src.start();
+  } catch(e){}
+}
+function setVoiceNoise(active){
+  if (!voiceNoise) return;
+  const now = audioCtx.currentTime;
+  voiceNoise.gain.cancelScheduledValues(now);
+  voiceNoise.gain.linearRampToValueAtTime(active ? 0.014 : 0, now + 0.2);
+}
+function pickFemaleVoice(){
+  if (!('speechSynthesis' in window)) return null;
+  const all = window.speechSynthesis.getVoices();
+  const lang = currentLang === 'ru' ? 'ru' : 'en';
+  const list = all.filter(v => v.lang && v.lang.startsWith(lang));
+  // Ищем женский голос
+  const female = list.filter(v => /(female|woman|milena|alena|katya|irina|elena|anna|victoria|samantha|karen|moira|tessa|zira|susan|linda|allison|joanna|amy|emma|google uk english female|google русский)/i.test(v.name));
+  if (female.length) return female[0];
+  // Иначе — любой, кроме мужских ключевых слов
+  const notMale = list.filter(v => !/(male|муж|yuri|dmitri|pavel|aleksandr|maxim|david|mark|george|daniel|alex)/i.test(v.name));
+  if (notMale.length) return notMale[0];
+  return list[0] || all[0] || null;
+}
+let robotDelayNode = null, robotDelayWet = null, robotDelayFB = null;
+function initRobotDelay(){
+  if (robotDelayNode) return;
+  try {
+    robotDelayNode = audioCtx.createDelay(); robotDelayNode.delayTime.value = 0.11;
+    robotDelayFB = audioCtx.createGain(); robotDelayFB.gain.value = 0.28;
+    robotDelayWet = audioCtx.createGain(); robotDelayWet.gain.value = 0.0;
+    robotDelayNode.connect(robotDelayFB); robotDelayFB.connect(robotDelayNode);
+    robotDelayNode.connect(robotDelayWet); robotDelayWet.connect(audioCtx.destination);
+  } catch(e){}
+}
+function speak(text){
+  if (!voiceEnabled || !('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  initVoiceChain();
+  initRobotDelay();
+  playChime(880,0.05,'square',0.02);
+  setTimeout(() => {
+    setVoiceNoise(true);
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = currentLang === 'ru' ? 'ru-RU' : 'en-US';
+    u.rate = 0.78;
+    u.pitch = 1.35;    // выше — «женственный» робот
+    u.volume = 0.9;
+    const v = pickFemaleVoice(); if (v) u.voice = v;
+    u.onend = () => { setTimeout(() => setVoiceNoise(false), 250); playChime(880,0.04,'square',0.015); };
+    u.onerror = () => setVoiceNoise(false);
+    window.speechSynthesis.speak(u);
+  }, 150);
+}
 
 const WORLD_SIZE = 21166, WORLD_HALF = WORLD_SIZE / 2;
 const renderer = new THREE.WebGLRenderer({antialias: !isMobile, powerPreference:'high-performance'});
@@ -583,7 +693,6 @@ function sampleHeight(x, z) {
   const h01 = heightMap[z1 * vertsPerRow + x0w], h11 = heightMap[z1 * vertsPerRow + x1];
   return (h00*(1-tx) + h10*tx)*(1-tz) + (h01*(1-tx) + h11*tx)*tz;
 }
-// Максимум вокруг точки — камера никогда не провалится
 function sampleHeightMax(x, z, r) {
   r = r || 3;
   let h = sampleHeight(x, z);
@@ -599,7 +708,7 @@ function sampleHeightMax(x, z, r) {
 }
 
 /* ============================================================
-   ЗВЁЗДЫ — 10 групп с мерцанием
+   ЗВЁЗДЫ — 10 групп, одинаково для ПК и мобильного
    ============================================================ */
 function createStarTex(s) {
   const c = document.createElement('canvas'); c.width = c.height = s;
@@ -615,6 +724,7 @@ function createStarTex(s) {
 }
 const starTex = createStarTex(64);
 const twinkleMaterials = [];
+const STAR_DPR = Math.min(devicePixelRatio, 2);
 function makeTwinkleStars(count, size, colorHex, baseFreq) {
   const geo = new THREE.BufferGeometry();
   const pos = [], col = [], phase = [], freq = [];
@@ -634,18 +744,18 @@ function makeTwinkleStars(count, size, colorHex, baseFreq) {
   geo.setAttribute('aPhase', new THREE.Float32BufferAttribute(phase,1));
   geo.setAttribute('aFreq', new THREE.Float32BufferAttribute(freq,1));
   const mat = new THREE.ShaderMaterial({
-    uniforms: { uTex: { value: starTex }, uSize: { value: size }, uTime: { value: 0 } },
+    uniforms: { uTex: { value: starTex }, uSize: { value: size }, uTime: { value: 0 }, uDPR: { value: STAR_DPR } },
     transparent: true, depthWrite: false, depthTest: true, blending: THREE.AdditiveBlending,
     vertexShader: `
       attribute vec3 aColor; attribute float aPhase; attribute float aFreq;
-      uniform float uSize; uniform float uTime;
+      uniform float uSize; uniform float uTime; uniform float uDPR;
       varying vec3 vColor; varying float vBright;
       void main() {
         vColor = aColor;
         vBright = 0.5 + 0.5 * sin(uTime * aFreq + aPhase);
         vBright = 0.35 + 0.65 * vBright;
         vec4 mv = modelViewMatrix * vec4(position, 1.0);
-        gl_PointSize = uSize;
+        gl_PointSize = uSize * uDPR;
         gl_Position = projectionMatrix * mv;
       }
     `,
@@ -658,20 +768,20 @@ function makeTwinkleStars(count, size, colorHex, baseFreq) {
   return new THREE.Points(geo, mat);
 }
 [
-  {count:isMobile?1200:3000, size:1.0, color:0xaabbdd, freq:0.4},
-  {count:isMobile?1100:2600, size:1.3, color:0xc0cee8, freq:0.55},
-  {count:isMobile?900:2200,  size:1.6, color:0xd0d8ee, freq:0.7},
-  {count:isMobile?700:1800,  size:1.9, color:0xdde4f4, freq:0.9},
-  {count:isMobile?600:1500,  size:2.2, color:0xe8eeff, freq:1.1},
-  {count:isMobile?500:1200,  size:2.6, color:0xf0f4ff, freq:1.35},
-  {count:isMobile?400:900,   size:3.0, color:0xffffff, freq:1.6},
-  {count:isMobile?300:700,   size:3.5, color:0xfff8e8, freq:1.9},
-  {count:isMobile?200:450,   size:4.0, color:0xfff0d8, freq:2.3},
-  {count:isMobile?120:280,   size:4.8, color:0xffe8c8, freq:2.8}
+  {count:3000, size:1.0, color:0xaabbdd, freq:0.4},
+  {count:2600, size:1.3, color:0xc0cee8, freq:0.55},
+  {count:2200, size:1.6, color:0xd0d8ee, freq:0.7},
+  {count:1800, size:1.9, color:0xdde4f4, freq:0.9},
+  {count:1500, size:2.2, color:0xe8eeff, freq:1.1},
+  {count:1200, size:2.6, color:0xf0f4ff, freq:1.35},
+  {count:900,  size:3.0, color:0xffffff, freq:1.6},
+  {count:700,  size:3.5, color:0xfff8e8, freq:1.9},
+  {count:450,  size:4.0, color:0xfff0d8, freq:2.3},
+  {count:280,  size:4.8, color:0xffe8c8, freq:2.8}
 ].forEach(g => scene.add(makeTwinkleStars(g.count, g.size, g.color, g.freq)));
 
 function makeMilkyWayStars() {
-  const TOTAL = isMobile ? 12000 : 35000;
+  const TOTAL = 35000;
   const geo = new THREE.BufferGeometry();
   const pos = [], col = [];
   const tilt = -0.38, ct = Math.cos(tilt), st = Math.sin(tilt), R = 59000;
@@ -692,7 +802,7 @@ function makeMilkyWayStars() {
   }
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
   geo.setAttribute('color', new THREE.Float32BufferAttribute(col,3));
-  return new THREE.Points(geo, new THREE.PointsMaterial({ size:1.6, map:starTex, transparent:true, opacity:0.9, blending:THREE.AdditiveBlending, depthWrite:false, depthTest:true, sizeAttenuation:false, vertexColors:true }));
+  return new THREE.Points(geo, new THREE.PointsMaterial({ size:1.6 * STAR_DPR, map:starTex, transparent:true, opacity:0.9, blending:THREE.AdditiveBlending, depthWrite:false, depthTest:true, sizeAttenuation:false, vertexColors:true }));
 }
 scene.add(makeMilkyWayStars());
 
@@ -1080,23 +1190,24 @@ function buildTruss(w,h,d,bays,br,mat) {
 }
 function buildTowerBig() {
   const g = new THREE.Group();
-  g.add(buildTruss(2.4, 22, 2.4, 10, 0.06, ROCKET_MATS.steel));
-  g.add(meshRocket(new THREE.BoxGeometry(3.0, 0.3, 3.0), ROCKET_MATS.dark, [0, 22, 0]));
-  for (const y of [5, 11, 17]) g.add(meshRocket(new THREE.BoxGeometry(3.2, 0.15, 3.2), ROCKET_MATS.dark, [0, y, 0]));
-  g.add(meshRocket(new THREE.BoxGeometry(3.6, 6.0, 1.0), ROCKET_MATS.white, [-0.4, 14, 1.6]));
-  g.add(meshRocket(new THREE.BoxGeometry(3.6, 0.4, 1.05), ROCKET_MATS.red, [-0.4, 15, 1.62]));
-  g.add(meshRocket(new THREE.SphereGeometry(0.25, 12, 10), new THREE.MeshBasicMaterial({color:0xff3a22}), [0, 22.5, 0]));
+  g.add(buildTruss(13, 96, 13, 16, 0.42, ROCKET_MATS.steel));
+  g.add(meshRocket(new THREE.BoxGeometry(15, 1.2, 15), ROCKET_MATS.dark, [0, 96, 0]));
+  for (const y of [24, 48, 72]) g.add(meshRocket(new THREE.BoxGeometry(15.6, 0.7, 15.6), ROCKET_MATS.dark, [0, y, 0]));
+  g.add(meshRocket(new THREE.BoxGeometry(14.4, 26, 2.4), ROCKET_MATS.white, [-1, 60, 7.6]));
+  g.add(meshRocket(new THREE.BoxGeometry(14.4, 1.6, 2.5), ROCKET_MATS.red, [-1, 64, 7.65]));
+  g.add(meshRocket(new THREE.BoxGeometry(2.6, 2.6, 17), ROCKET_MATS.white, [6.6, 57, -1]));
+  g.add(meshRocket(new THREE.SphereGeometry(0.7, 12, 10), new THREE.MeshBasicMaterial({color:0xff3a22}), [0, 98.2, 0]));
   return g;
 }
 function buildTowerSmall() {
   const g = new THREE.Group();
-  g.add(buildTruss(1.2, 14, 1.2, 8, 0.05, ROCKET_MATS.white2));
-  g.add(meshRocket(new THREE.BoxGeometry(1.8, 1.2, 1.8), ROCKET_MATS.red, [0, 15, 0]));
-  g.add(meshRocket(new THREE.BoxGeometry(1.2, 0.4, 1.2), ROCKET_MATS.dark, [0, -0.2, 0]));
-  for (const y of [4, 8, 12]) g.add(meshRocket(new THREE.BoxGeometry(1.4, 0.15, 1.4), ROCKET_MATS.dark, [0, y, 0]));
-  g.add(meshRocket(new THREE.BoxGeometry(0.4, 3.0, 0.4), ROCKET_MATS.dark, [0, 13, -0.9]));
-  g.add(meshRocket(new THREE.BoxGeometry(1.8, 0.4, 0.4), ROCKET_MATS.white, [-1.1, 11, 0.4]));
-  g.add(meshRocket(new THREE.SphereGeometry(0.18, 12, 10), new THREE.MeshBasicMaterial({color:0xff3a22}), [0, 15.5, 0]));
+  g.add(buildTruss(4.2, 62, 4.2, 14, 0.30, ROCKET_MATS.white2));
+  g.add(meshRocket(new THREE.BoxGeometry(5.4, 3.4, 5.4), ROCKET_MATS.red, [0, 63, 0]));
+  g.add(meshRocket(new THREE.BoxGeometry(4.8, 1.2, 4.8), ROCKET_MATS.dark, [0, -0.4, 0]));
+  for (const y of [16, 32, 48]) g.add(meshRocket(new THREE.BoxGeometry(5, 0.6, 5), ROCKET_MATS.dark, [0, y, 0]));
+  g.add(meshRocket(new THREE.BoxGeometry(1.4, 10, 1.4), ROCKET_MATS.dark, [0, 55, -3.2]));
+  g.add(meshRocket(new THREE.BoxGeometry(6.4, 1.5, 1.3), ROCKET_MATS.white, [-4.2, 50.5, 1.2]));
+  g.add(meshRocket(new THREE.SphereGeometry(0.55, 12, 10), new THREE.MeshBasicMaterial({color:0xff3a22}), [0, 65.4, 0]));
   return g;
 }
 
@@ -1167,7 +1278,6 @@ function makeO2LabelTexture() {
 }
 const o2LabelTex = makeO2LabelTexture();
 
-// Станция кислорода — крупнее в 2 раза, зафиксирована на поверхности
 function createO2Cache() {
   const group = new THREE.Group();
   const SCALE = 2.0;
@@ -1225,29 +1335,21 @@ function createO2Cache() {
   const indicator = new THREE.Mesh(new THREE.SphereGeometry(0.08, 12, 12), indicatorMat);
   indicator.position.set(0.7, 2.85, 0.4); inner.add(indicator);
 
-  // Свечение и сфера касания (в масштабе 1 — крупный радиус в мире)
   const disc = new THREE.Mesh(new THREE.CircleGeometry(6, 32),
     new THREE.MeshBasicMaterial({color:0x4fc3f7, transparent:true, opacity:0.30, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide}));
   disc.rotation.x = -Math.PI/2; disc.position.y = 0.05; disc.userData.isO2Disc = true; group.add(disc);
   const glow = new THREE.Mesh(new THREE.SphereGeometry(7, 20, 20),
     new THREE.MeshBasicMaterial({color:0x4fc3f7, transparent:true, opacity:0.16, blending:THREE.AdditiveBlending, depthWrite:false}));
   glow.position.y = 2.5; glow.userData.isO2Glow = true; group.add(glow);
-  // Сфера касания для заправки
   const touchSphere = new THREE.Mesh(new THREE.SphereGeometry(3.5, 16, 16),
     new THREE.MeshBasicMaterial({color:0x4fc3f7, transparent:true, opacity:0.06, blending:THREE.AdditiveBlending, depthWrite:false}));
   touchSphere.position.y = 3; touchSphere.userData.isO2Touch = true; group.add(touchSphere);
   return group;
 }
 
-// ============================================================
-// Поиск ровной площадки рядом с точкой.
-// Возвращает { x, z, y, slope }, где slope — локальный разброс
-// высот в окне 6 м (чем меньше, тем ровнее).
-// ============================================================
 function findFlatSpot(x, z, radius) {
   radius = radius || 80;
   let best = { x, z, y: sampleHeight(x, z), slope: Infinity };
-  // 16 пробных направлений × 3 радиуса + исходная точка
   for (let i = 0; i < 16; i++) {
     const ang = (i / 16) * Math.PI * 2;
     for (let k = 1; k <= 3; k++) {
@@ -1263,7 +1365,6 @@ function findFlatSpot(x, z, radius) {
       if (slope < best.slope) best = { x: tx, z: tz, y: ty, slope };
     }
   }
-  // Сама исходная точка
   {
     const ty = sampleHeight(x, z);
     const hN = sampleHeight(x, z + 6);
@@ -1279,7 +1380,6 @@ function findFlatSpot(x, z, radius) {
 function spawnObjects() {
   const segW = WORLD_SIZE / REGION_COUNT;
 
-  // Экипаж — спавн по сглаженной карте на ровной площадке
   CREW_SPOTS.forEach((spot, i) => {
     const baseX = -WORLD_HALF + segW * (spot.region + 0.2 + Math.random() * 0.6);
     const baseZ = (Math.random() - 0.5) * WORLD_SIZE * 0.8;
@@ -1291,7 +1391,6 @@ function spawnObjects() {
     crewItems.push(mesh);
   });
 
-  // Кислород — спавн по сглаженной карте на ровной площадке
   O2_SPOTS.forEach((spot, i) => {
     const baseX = -WORLD_HALF + segW * (spot.region + 0.2 + Math.random() * 0.6);
     const baseZ = (Math.random() - 0.5) * WORLD_SIZE * 0.8;
@@ -1303,17 +1402,17 @@ function spawnObjects() {
     o2Items.push(mesh);
   });
 
-  // Ракета — по сглаженной карте
-  rocket.position.set(0, sampleHeight(0, 0) + 0.15, 0);
+  // Стартовая площадка с ракетой и двумя башнями (как в rcScene)
+  const flatRocket = findFlatSpot(0, 0, 80);
+  rocket.position.set(flatRocket.x, flatRocket.y + 0.15, flatRocket.z);
 
-  // Две башни — тоже по сглаженной карте, на ровных площадках
   const towerA = buildTowerBig();
-  const flatA = findFlatSpot(-30, -14, 60);
+  const flatA = findFlatSpot(flatRocket.x - 21, flatRocket.z - 16, 40);
   towerA.position.set(flatA.x, flatA.y + 0.15, flatA.z);
   scene.add(towerA);
 
   const towerB = buildTowerSmall();
-  const flatB = findFlatSpot(34, 10, 60);
+  const flatB = findFlatSpot(flatRocket.x + 8.6, flatRocket.z - 4.2, 40);
   towerB.position.set(flatB.x, flatB.y + 0.15, flatB.z);
   scene.add(towerB);
 }
@@ -1345,8 +1444,7 @@ function hideCrewInfoWindow() {
 }
 function updateMoveState() {
   const btn = document.getElementById('flightBtn');
-  const mode = document.getElementById('flightMode');
-  mode.textContent = flightMode ? T().flight : T().walk;
+  btn.textContent = flightMode ? T().flight : T().walk;
   btn.classList.toggle('flight', flightMode);
 }
 function toggleFlight() { flightMode = !flightMode; updateMoveState(); playChime(flightMode ? 660 : 440, 0.15, 'sine', 0.08); }
@@ -1358,11 +1456,8 @@ document.getElementById('overlay').addEventListener('click', () => {
   document.getElementById('overlay').classList.add('hidden');
   if (!isMobile && renderer.domElement.requestPointerLock) renderer.domElement.requestPointerLock();
   if (audioCtx.state === 'suspended') audioCtx.resume();
-  const menuTrack = document.getElementById('mobyMenu');
-  if (menuTrack) { menuTrack.pause(); menuTrack.currentTime = 0; }
   document.getElementById('radio').play().catch(()=>{});
   speak(T().speakIntro);
-  // Запускаем межстраничную рекламу каждые 15 минут (первый показ через 15 мин)
   startInterstitialAds();
 });
 renderer.domElement.addEventListener('mousedown', e => {
@@ -1394,9 +1489,6 @@ function togglePanel(force) { panelOpen = force !== undefined ? force : !panelOp
 hamburger.addEventListener('click', () => togglePanel());
 document.getElementById('panelClose').addEventListener('click', () => togglePanel(false));
 
-/* ============================================================
-   РАДАР — по центру, максимально белые линии / чёрные на светлом
-   ============================================================ */
 const minimapCanvas = document.getElementById('minimapCanvas');
 const mmCtx = minimapCanvas.getContext('2d');
 let mmSize = 280;
@@ -1430,16 +1522,11 @@ function updateMinimap() {
   const axisColor = bgLight ? 'rgba(0,0,0,.75)' : 'rgba(255,255,255,.7)';
 
   mmCtx.clearRect(0, 0, w, h);
-  mmCtx.strokeStyle = lineColor;
-  mmCtx.lineWidth = 1.0;
-  mmCtx.beginPath();
-  mmCtx.arc(cx, cy, w/2 - 6, 0, Math.PI*2);
-  mmCtx.stroke();
-  mmCtx.strokeStyle = gridColor;
-  mmCtx.lineWidth = 0.8;
+  mmCtx.strokeStyle = lineColor; mmCtx.lineWidth = 1.0;
+  mmCtx.beginPath(); mmCtx.arc(cx, cy, w/2 - 6, 0, Math.PI*2); mmCtx.stroke();
+  mmCtx.strokeStyle = gridColor; mmCtx.lineWidth = 0.8;
   for (let r = 1; r <= 3; r++){ mmCtx.beginPath(); mmCtx.arc(cx, cy, (w/2 - 16) * r/3, 0, Math.PI*2); mmCtx.stroke(); }
-  mmCtx.strokeStyle = axisColor;
-  mmCtx.lineWidth = 0.8;
+  mmCtx.strokeStyle = axisColor; mmCtx.lineWidth = 0.8;
   mmCtx.beginPath();
   mmCtx.moveTo(cx, cy - (w/2 - 16)); mmCtx.lineTo(cx, cy + (w/2 - 16));
   mmCtx.moveTo(cx - (w/2 - 16), cy); mmCtx.lineTo(cx + (w/2 - 16), cy);
@@ -1465,8 +1552,7 @@ function updateMinimap() {
     return {x: cx + (rx/MINIMAP_RANGE)*R_PX, y: cy - (rz/MINIMAP_RANGE)*R_PX, inside:true};
   }
   function drawCross(x, y, color, size) {
-    mmCtx.strokeStyle = color;
-    mmCtx.lineWidth = 1.0;
+    mmCtx.strokeStyle = color; mmCtx.lineWidth = 1.0;
     const s = size * 3;
     mmCtx.beginPath();
     mmCtx.moveTo(x - s, y); mmCtx.lineTo(x + s, y);
@@ -1492,7 +1578,6 @@ function showToast(prefix, text) {
   logTimeout = setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.classList.add('hidden'), 500); }, 5000);
 }
 
-/* Полноэкранный вид астронавта в полный рост */
 const crewBigCanvas = document.getElementById('crewBigCanvas');
 const crewBigRenderer = new THREE.WebGLRenderer({canvas:crewBigCanvas, antialias:true, alpha:true});
 crewBigRenderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -1508,7 +1593,6 @@ crewBigScene.add(crewBigGroup);
 const crewBigAstro = createAstronaut();
 crewBigAstro.scale.set(1.0, 1.0, 1.0);
 crewBigGroup.add(crewBigAstro);
-// Позиционируем камеру так, чтобы фигура в полный рост вписывалась целиком
 function fitCrewBigCamera() {
   const h = 1.9;
   const fov = crewBigCam.fov * Math.PI / 180;
@@ -1577,16 +1661,14 @@ function checkCollection(cx, cz) {
       item.visible = false;
       crewSaved++;
       crewStatuses[item.userData.id] = 1;
-      // Кислород НЕ пополняется при спасении астронавта — только склад O₂
       playCrewSaved();
-      showToast(T().toastSaved + ' ' + item.userData.name, T().toastSavedDesc);
       speak(T().speakSaved + item.userData.name + '.');
+      showToast(T().toastSaved + ' ' + item.userData.name, T().toastSavedDesc);
       updateCrewList();
     }
   }
   if (!anyCrewClose && infoWindowItem) hideCrewInfoWindow();
 
-  // Заправка — касание сферы
   for (const item of o2Items) {
     if (item.userData.used) continue;
     const dx = wrappedDelta(cx - item.position.x);
@@ -1596,8 +1678,8 @@ function checkCollection(cx, cz) {
       item.visible = false;
       oxygen = 100;
       playO2Pickup();
-      showToast(T().toastO2, T().toastO2Desc);
       speak(T().speakO2);
+      showToast(T().toastO2, T().toastO2Desc);
     }
   }
 }
@@ -1614,27 +1696,40 @@ function updateCrewList() {
 }
 function updateHUD() {
   const o2 = Math.round(oxygen);
-  document.getElementById('o2BigFill').style.width = o2 + '%';
-  const bigBar = document.getElementById('o2Panel');
-  bigBar.classList.remove('warn','danger');
-  if (o2 < 30) bigBar.classList.add('danger');
-  else if (o2 < 60) bigBar.classList.add('warn');
-  document.getElementById('o2BigPercent').textContent = o2 + '%';
+  const fill = document.getElementById('o2WideFill');
+  if (fill) fill.style.height = o2 + '%';
+  const panel = document.getElementById('o2WidePanel');
+  if (panel) {
+    panel.classList.remove('warn','danger');
+    if (o2 < 30) panel.classList.add('danger');
+    else if (o2 < 60) panel.classList.add('warn');
+  }
+  const pct = document.getElementById('o2BigPercent');
+  if (pct) pct.textContent = o2 + '%';
+
   const min = Math.floor(missionTime/60);
   const sec = Math.floor(missionTime%60);
   const ts = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
   document.getElementById('timeRemain').textContent = ts;
   document.getElementById('crewCount').textContent = crewSaved + '/5';
   document.getElementById('o2Percent').textContent = o2 + '%';
+
+  const goal = document.getElementById('missionGoal');
+  if (goal) goal.textContent = crewSaved >= 5 ? T().goalReturn : T().goalRescue;
+  const crewStat = document.getElementById('crewStat');
+  if (crewStat) crewStat.textContent = crewSaved + '/5';
+  const timeStat = document.getElementById('timeStat');
+  if (timeStat) timeStat.textContent = ts;
+
   const tNorm = ((camera.position.x + WORLD_HALF) % WORLD_SIZE + WORLD_SIZE) % WORLD_SIZE / WORLD_SIZE;
   const rid = Math.min(REGION_COUNT - 1, Math.floor(tNorm * REGION_COUNT));
   document.getElementById('regionName').textContent = REGIONS[rid].name;
-  const goal = document.getElementById('missionGoal');
-  const prog = document.getElementById('missionProgress');
-  goal.textContent = crewSaved >= 5 ? T().goalReturn : T().goalRescue;
-  prog.textContent = `${T().progress} ${crewSaved}/5 · ${ts}`;
 }
-function triggerFinale() { if (missionComplete) return; missionComplete = true; speak(T().speakFindRocket); }
+function triggerFinale() {
+  if (missionComplete) return;
+  missionComplete = true;
+  speak(T().speakFindRocket);
+}
 function triggerFailure(reason) {
   if (missionFailed) return;
   missionFailed = true;
@@ -1646,7 +1741,7 @@ function triggerFailure(reason) {
 window.restartGame = () => showRewardedAd().then(() => location.reload());
 
 /* ============================================================
-   СТАРТОВАЯ ПЛОЩАДКА + РАКЕТА + ТИТРЫ
+   ФИНАЛЬНАЯ СЦЕНА (rocketCam) — с возможностью вращения/приближения
    ============================================================ */
 const rcCanvas = document.getElementById('rcCanvas');
 const rcRenderer = new THREE.WebGLRenderer({canvas:rcCanvas, antialias:true, powerPreference:'high-performance'});
@@ -1661,8 +1756,22 @@ const rcScene = new THREE.Scene();
 const rcCamera = new THREE.PerspectiveCamera(38, innerWidth/innerHeight, .5, 9000);
 rcCamera.position.set(78,34,96);
 const rcControls = new OrbitControls(rcCamera, rcCanvas);
-rcControls.target.set(0,26,0); rcControls.enableDamping = true; rcControls.dampingFactor = .055;
-rcControls.minDistance = 12; rcControls.maxDistance = 3000; rcControls.maxPolarAngle = Math.PI*.497;
+rcControls.target.set(0,26,0);
+rcControls.enableDamping = true;
+rcControls.dampingFactor = .055;
+rcControls.minDistance = 12;
+rcControls.maxDistance = 3000;
+rcControls.maxPolarAngle = Math.PI*.497;
+// Сразу разрешаем вращение / зум / перетаскивание
+rcControls.enablePan = true;
+rcControls.enableZoom = true;
+rcControls.enableRotate = true;
+rcControls.enabled = true;
+rcControls.touchRotate = true;
+rcControls.touchZoom = true;
+rcControls.touchPan = true;
+rcControls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+rcControls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
 
 const rcComposer = new EffectComposer(rcRenderer);
 rcComposer.addPass(new RenderPass(rcScene, rcCamera));
@@ -1805,12 +1914,14 @@ const rcBKeys=s=>({
 });
 const rcBK=rcBoostG.map(b=>rcBKeys(b.s));
 const rcCamKeys=[[0,26,140],[1.7,30,155],[13,120,300],[20,150,340],[40,120,330],[50,90,300],[72,90,300]];
-let rcIgn=false, rcShake=0, creditsStarted=false, cameraFollowActive=false, followStartTime=0;
+let rcIgn=false, rcShake=0, creditsStarted=false;
 const PAD_BOARD_DELAY = 10;
 let padTimer = 0, padState = 'idle';
 
 function rcKfWrap(keys,t){ if(t<=keys[0][0]) return keys[0][1]; for(let i=0;i<keys.length-1;i++){ const a=keys[i], b=keys[i+1]; if(t<=b[0]){ const u=(t-a[0])/(b[0]-a[0]); const e=u*u*(3-2*u); return a[1]+(b[1]-a[1])*e; } } return keys[keys.length-1][1]; }
 function rcReset(){ rcState='idle'; rcMt=0; rcAlt=0; rcVel=0; rcSep=false; rcLand=[false,false]; rcRocket.position.y=0; rcCoreG.position.set(0,0,0); rcCoreG.rotation.set(0,0,0); rcBoostG.forEach(b=>{b.g.position.set(b.s*3.7,0,0); b.g.rotation.set(0,0,0); b.legs.forEach(l=>l.rotation.z=0);}); rcClamps.forEach(c=>c.rotation.z=0); rcFlameMat.forEach(f=>f.u.uPower.value=0); rcBaseGlow.material.opacity=0; rcGlowBoost.forEach(g=>g.material.opacity=0); for(let i=0;i<rcN;i++){ rcSl[i]=0; rcSA[i]=0; } rcSetRumble(0,120); rcCamera.position.set(78,34,96); rcControls.target.set(0,26,0); }
+// Пользователь может сам менять точку зрения в любой момент — этот счётчик
+// нужен только чтобы не сбрасывать её сразу после запуска.
 rcControls.addEventListener('start',()=>rcUserZoom=performance.now());
 
 let rcLastT=0;
@@ -1824,7 +1935,7 @@ function rcLoop(now){
   rcM.beacon.color.setRGB(bl*1.2,bl*.16,bl*.08);
 
   if(rcState==='idle' && Math.random()<.55){ const a=Math.random()*Math.PI*2; rcPuff(Math.cos(a)*2.4,1.6+Math.random()*2,Math.sin(a)*2.4, Math.cos(a)*2.2,.6+Math.random(),Math.sin(a)*2.2,.9,1.6,4.5,.86,.88,.92); }
-  if (padState === 'boarding') { padTimer += dt; if (padTimer >= PAD_BOARD_DELAY) { padState = 'countdown'; rcState = 'count'; rcMt = -rcT_COUNT; rcUserZoom = 0; } }
+  if (padState === 'boarding') { padTimer += dt; if (padTimer >= PAD_BOARD_DELAY) { padState = 'countdown'; rcState = 'count'; rcMt = -rcT_COUNT; } }
   if(rcState==='count'){ rcMt+=dt; if(rcMt>=rcT_IGN && !rcIgn){ rcIgn=true; rcShake=1; rcFlameMat.forEach(f=>f.u.uPower.value=.001); if(rcSndOn) rcSetRumble(.5,220); for(let i=0;i<160;i++){ const a=Math.random()*Math.PI*2,r=3+Math.random()*8; rcPuff(Math.cos(a)*r,.4+Math.random()*2,Math.sin(a)*r, Math.cos(a)*(14+Math.random()*22),1+Math.random()*5,Math.sin(a)*(14+Math.random()*22), 5+Math.random()*7,5.5,7+Math.random()*6,.92,.9,.86); } } if(rcMt>=rcT_REL){ rcState='flight'; rcMt=0; rcIgn=true; rcClamps.forEach(c=>c.rotation.z=-1.1); } }
   if(rcIgn){ const p=Math.min(1,(rcState==='count'?Math.max(0,rcMt)+3:rcMt*2.4)/1.6); rcFlameMat.forEach((f,i)=>{ if(i===0) f.u.uPower.value=p; }); rcBaseGlow.material.opacity=p*.85; if(rcShake>0) rcShake=Math.max(0,rcShake-dt*.55); if(Math.random()<p*.9){ for(let i=0;i<3;i++){ const a=Math.random()*Math.PI*2,r=2+Math.random()*7; rcPuff(Math.cos(a)*r,.2+Math.random(),Math.sin(a)*r, Math.cos(a)*(10+Math.random()*26),1.5+Math.random()*7,Math.sin(a)*(10+Math.random()*26), 4+Math.random()*8,7.5,8+Math.random()*7,.95,.92,.87); } } }
   if(rcState==='flight'){ rcMt+=dt; const tr=rcTraj(Math.max(0,rcMt)); rcAlt=tr.h; rcVel=tr.v; rcRocket.position.y=rcAlt; const thin=1+Math.min(rcAlt/5200,2.6); rcPlumeCore.scale.set(1+(thin-1)*.55,thin,1+(thin-1)*.55); const pf=Math.min(1,rcMt*2.2); rcFlameMat[0].u.uPower.value=pf; rcBaseGlow.material.opacity=pf*.85; if(rcSndOn){ const d=Math.max(0,1-rcAlt/3200); rcSetRumble(.62*d+.05,120+260*d); } rcShake=Math.max(0,Math.min(1,6/(rcAlt+8)))*.9; if(rcMt<rcT_SEP && Math.random()<.75){ const a=Math.random()*Math.PI*2; rcPuff(Math.cos(a)*3,rcAlt-6+Math.random()*4,Math.sin(a)*3, Math.cos(a)*4,-2+Math.random()*3,Math.sin(a)*4,4,4.2,9,.95,.94,.92); }
@@ -1832,8 +1943,19 @@ function rcLoop(now){
     if(rcSep){ const tb=rcMt-rcT_SEP; rcBoostG.forEach((b,i)=>{ const K=rcBK[i], pw=rcKfWrap(K.bb,tb); b.g.position.set(b.s*rcKfWrap(K.x,tb), rcKfWrap(K.y,tb)-rcAlt, 0); b.g.rotation.z=rcKfWrap(K.a,tb); const lg=rcKfWrap(K.leg,tb); b.legs.forEach(l=>l.rotation.z=lg); rcFlameMat[i+1].u.uPower.value=pw; rcGlowBoost[i].material.opacity=pw*.8; rcPlumeBoost[i].scale.set(1,1+pw*.2,1); if(pw>.3 && Math.random()<.6){ const w=new THREE.Vector3(); b.g.getWorldPosition(w); rcPuff(w.x,Math.max(.5,w.y-14),w.z,(Math.random()-.5)*6,-3,(Math.random()-.5)*6, 3,4.5,6,.95,.93,.9); } if(tb>34.2 && !rcLand[i]){ rcLand[i]=true; for(let k=0;k<70;k++){ const a=Math.random()*Math.PI*2,r=2+Math.random()*6; rcPuff(b.s*28+Math.cos(a)*r,.6+Math.random(),Math.sin(a)*r, Math.cos(a)*(9+Math.random()*16),1+Math.random()*4,Math.sin(a)*(9+Math.random()*16), 4+Math.random()*6,6,7+Math.random()*4,.9,.88,.84); } } }); }
     if(rcMt>=rcT_END){ rcState='done'; }
   }
-  if(rcState==='done'){ if (!cameraFollowActive) { cameraFollowActive = true; followStartTime = performance.now(); } const targetY = Math.max(26, rcAlt * 0.85 + 40); const targetZ = 320 + rcAlt * 0.15; rcControls.target.lerp(new THREE.Vector3(0, targetY, 0), 0.02); rcCamera.position.lerp(new THREE.Vector3(140, targetY + 80, targetZ), 0.02); rcControls.update(); const bothLanded = rcLand[0] && rcLand[1]; if (bothLanded && !creditsStarted) { creditsStarted = true; const r = document.getElementById('radio'); if (r) { r.pause(); r.currentTime = 0; } const moby = document.getElementById('mobyTrack'); if (moby) { moby.volume = 1.0; moby.play().catch(()=>{}); } document.getElementById('credits').classList.add('show'); showCredits(); } }
-  if (rcState==='flight') { const ty = rcKfWrap(rcCamKeys.map(k=>[k[0],k[1]]), Math.min(rcMt, rcT_END)); const td = rcKfWrap(rcCamKeys.map(k=>[k[0],k[2]]), Math.min(rcMt, rcT_END)); const dir=rcCamera.position.clone().sub(rcControls.target); const cur=dir.length()||1; const zoomed=performance.now()-rcUserZoom<6000; const want=zoomed?cur:cur+(td-cur)*.035; dir.multiplyScalar(want/cur); rcControls.target.y += (ty-rcControls.target.y)*.05; rcCamera.position.copy(rcControls.target).add(dir); }
+  if(rcState==='done'){ const bothLanded = rcLand[0] && rcLand[1]; if (bothLanded && !creditsStarted) { creditsStarted = true; const r = document.getElementById('radio'); if (r) { r.pause(); r.currentTime = 0; } document.getElementById('credits').classList.add('show'); showCredits(); } }
+  // Автоподстройка камеры во время полёта — только если пользователь сам не начал
+  // управлять камерой. Как только он тронул — перестаём вмешиваться.
+  if (rcState==='flight' && performance.now() - rcUserZoom > 8000) {
+    const ty = rcKfWrap(rcCamKeys.map(k=>[k[0],k[1]]), Math.min(rcMt, rcT_END));
+    const td = rcKfWrap(rcCamKeys.map(k=>[k[0],k[2]]), Math.min(rcMt, rcT_END));
+    const dir=rcCamera.position.clone().sub(rcControls.target);
+    const cur=dir.length()||1;
+    const want=cur+(td-cur)*.02;
+    dir.multiplyScalar(want/cur);
+    rcControls.target.y += (ty-rcControls.target.y)*.03;
+    rcCamera.position.copy(rcControls.target).add(dir);
+  }
   rcControls.update(); rcUpdSmoke(dt);
   if(rcShake>0){ rcCamera.position.x+=(Math.random()-.5)*rcShake*.42; rcCamera.position.y+=(Math.random()-.5)*rcShake*.42; }
   rcComposer.render(); requestAnimationFrame(rcLoop);
@@ -1842,7 +1964,18 @@ function rcResize(){ const r=rcCanvas.getBoundingClientRect(); const w=r.width||
 rcResize(); rcReset(); requestAnimationFrame(rcLoop); addEventListener('resize', rcResize);
 
 function openRocketScene(){ document.getElementById('rocketCam').classList.add('show'); rcResize(); }
-function startPadSequence(){ padState = 'boarding'; padTimer = 0; speak(T().speakBoarding); rcInitAudio(); if (rcAC && rcAC.state === 'suspended') rcAC.resume(); if (rcSndOn) rcSetRumble(0.15, 180); const r = document.getElementById('radio'); if (r) { r.pause(); r.currentTime = 0; } }
+function startPadSequence(){
+  padState = 'boarding';
+  padTimer = 0;
+  rcInitAudio();
+  if (rcAC && rcAC.state === 'suspended') rcAC.resume();
+  if (rcSndOn) rcSetRumble(0.15, 180);
+  const r = document.getElementById('radio');
+  if (r) { r.pause(); r.currentTime = 0; }
+  const mTrack = document.getElementById('mobyTrack');
+  if (mTrack) { mTrack.currentTime = 0; mTrack.volume = 1.0; mTrack.play().catch(()=>{}); }
+  speak(T().speakBoarding);
+}
 function showCredits(){ const el = document.getElementById('creditsText'); const seq = [ { txt: 'Creator<br>Serg Shendrik', dur: 20000 }, { txt: 'Special thanks to:', dur: 10000 }, { txt: 'Rachel Shendrik', dur: 10000 }, { txt: 'Stanislaw Lem', dur: 10000 }, { txt: '©3scape Labs 2026', dur: 999999 } ]; let i = 0; const step = () => { if (i >= seq.length) return; el.classList.remove('show'); setTimeout(() => { el.innerHTML = seq[i].txt; el.classList.add('show'); const d = seq[i].dur; i++; setTimeout(step, d); }, 1300); }; step(); }
 
 /* ============================================================
@@ -1919,7 +2052,6 @@ function animate() {
   if (keys['KeyR'] && onGround) { velocityY = JUMP_VELOCITY; onGround = false; }
   camera.position.y += velocityY * dt;
 
-  // Камера никогда не проваливается под рельеф — берём максимум в окне
   const hHere = sampleHeightMax(camera.position.x, camera.position.z, 3.0);
   const gh = hHere + 2.5;
   const lookAhead = velocityY < 0 ? velocityY*dt : 0;
@@ -2001,7 +2133,6 @@ addEventListener('resize', () => {
   resizeCrewBig();
 });
 document.body.addEventListener('touchmove', e => { if (e.target === document.body) e.preventDefault(); }, {passive:false});
-document.getElementById('voiceBtn2').addEventListener('click', () => { voiceEnabled = !voiceEnabled; document.getElementById('voiceBtn2').innerHTML = voiceEnabled ? T().voiceOn : T().voiceOff; });
 document.getElementById('musicBtn2').addEventListener('click', () => { const r = document.getElementById('radio'); if (r.paused) r.play().catch(()=>{}); else r.pause(); });
 </script>
 </body>
