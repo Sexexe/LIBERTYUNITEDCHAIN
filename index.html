@@ -22,7 +22,7 @@
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{width:100%;height:100%;overflow:hidden;position:fixed;top:0;left:0;background:#000;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",system-ui,sans-serif;color:var(--text);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 
-  #langBtn{position:fixed;top:max(14px,env(safe-area-inset-top));left:max(14px,env(safe-area-inset-left));z-index:120;padding:9px 16px;font-family:ui-monospace,monospace;font-size:12px;color:var(--text-bright);letter-spacing:2px;cursor:pointer;background:var(--bg);border:1px solid var(--border);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);border-radius:10px}
+  #langBtn{position:fixed;top:max(14px,env(safe-area-inset-top));left:max(14px,env(safe-area-inset-left));z-index:130;padding:9px 16px;font-family:ui-monospace,monospace;font-size:12px;color:var(--text-bright);letter-spacing:2px;cursor:pointer;background:var(--bg);border:1px solid var(--border);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);border-radius:10px}
 
   /* HUD — вариант 3, единый для ПК и мобильного */
   #hudColumn{position:fixed;top:max(14px,env(safe-area-inset-top));left:max(14px,env(safe-area-inset-left));z-index:30;pointer-events:none;padding-top:52px;display:flex;flex-direction:column;gap:10px}
@@ -45,7 +45,6 @@
   #o2WidePanel.danger .wTrack > div{background:linear-gradient(0deg,#6a6258,#b8a890);animation:o2Pulse .8s infinite}
   @keyframes o2Pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-  /* Нижняя панель миссии и очков */
   #bottomBar{
     position:fixed;left:50%;transform:translateX(-50%);
     bottom:max(20px,calc(env(safe-area-inset-bottom) + 20px));
@@ -91,10 +90,7 @@
   #flightBtn:active{transform:scale(.92)}
   #flightBtn.flight{background:rgba(216,208,192,.22);border-color:var(--text-bright);box-shadow:0 0 24px rgba(216,208,192,.35)}
 
-  #crewBigView{position:fixed;inset:0;z-index:75;pointer-events:none;opacity:0;transition:opacity .5s;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at center,rgba(20,18,15,.85) 0%,rgba(0,0,0,.95) 70%)}
-  #crewBigView.show{opacity:1}
-  #crewBigView canvas{position:absolute;inset:0;width:100%!important;height:100%!important}
-
+  /* Окно при близком подлёте к члену экипажа — только текстовая подсказка */
   #crewInfoWindow{position:fixed;bottom:max(120px,calc(env(safe-area-inset-bottom) + 120px));left:50%;transform:translateX(-50%) translateY(120%);z-index:80;background:var(--bg-strong);border:1px solid var(--border-strong);border-radius:16px;padding:18px 24px;max-width:340px;backdrop-filter:blur(28px) saturate(160%);-webkit-backdrop-filter:blur(28px) saturate(160%);transition:transform .5s cubic-bezier(.2,.9,.3,1),opacity .5s;opacity:0;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.3);text-align:center}
   #crewInfoWindow.show{transform:translateX(-50%) translateY(0);opacity:1}
   #crewInfoWindow .ci-label{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;text-align:center;margin-bottom:8px}
@@ -119,7 +115,15 @@
   #overlay::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.75) 0%,rgba(0,0,0,.4) 40%,rgba(0,0,0,.55) 70%,rgba(0,0,0,.85) 100%);z-index:1;pointer-events:none}
 
   #ovTopInfo{position:relative;z-index:2;width:100%;max-width:900px;padding:max(28px,calc(env(safe-area-inset-top) + 28px)) 28px 0;display:flex;flex-direction:column;align-items:center;gap:14px;color:#ffffff;text-shadow:0 2px 12px rgba(0,0,0,.9),0 0 24px rgba(0,0,0,.7)}
-  #ovTopInfo h2{font-size:clamp(26px,5vw,44px);letter-spacing:clamp(6px,1.8vw,14px);color:#ffffff;font-weight:200;font-family:ui-monospace,monospace;text-shadow:0 2px 20px rgba(0,0,0,.95)}
+  #ovTopInfo h2{
+    font-size:clamp(20px,4.2vw,38px);
+    letter-spacing:clamp(4px,1.4vw,10px);
+    color:#ffffff;
+    font-weight:800;
+    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+    text-shadow:0 2px 20px rgba(0,0,0,.95);
+    line-height:1.05;
+  }
   #ovTopInfo .subtitle{color:#ffffff;letter-spacing:clamp(5px,1.5vw,10px);font-size:12px;font-family:ui-monospace,monospace;opacity:.9}
   #ovTopInfo .goal{color:#ffffff;font-size:13px;line-height:1.85;max-width:620px;font-family:ui-monospace,monospace;margin-top:6px;opacity:.95}
   #ovTopInfo .legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:10px;font-family:ui-monospace,monospace;font-size:12px;letter-spacing:1.5px;color:#ffffff;justify-content:center;align-items:center}
@@ -145,11 +149,12 @@
   #rocketCam canvas:active{cursor:grabbing}
 
   @media (max-width:768px){
-    #radarWrap{width:200px;height:200px}
-    #flightBtn{width:82px;height:82px;font-size:13px;bottom:max(140px,calc(env(safe-area-inset-bottom) + 140px))}
+    #langBtn{top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));padding:8px 14px;font-size:11px;z-index:130}
+    #ovTopInfo{padding:max(58px,calc(env(safe-area-inset-top) + 58px)) 16px 0;gap:10px}
+    #ovTopInfo .goal{font-size:11px}
+    #ovTopInfo .legend{font-size:11px;gap:12px}
     #bottomBar .goal{font-size:10px}
     #bottomBar .statsRow{font-size:9px;gap:10px;padding:5px 12px}
-    #crewInfoWindow{bottom:max(140px,calc(env(safe-area-inset-bottom) + 140px))}
   }
 </style>
 </head>
@@ -196,8 +201,6 @@
   <div class="divider"></div>
   <button id="musicBtn2">🎵 MISSION CONTROL</button>
 </div>
-
-<div id="crewBigView"><canvas id="crewBigCanvas"></canvas></div>
 
 <div id="crewInfoWindow">
   <div class="ci-label" id="ciLabel">◆ ЧЛЕН ЭКИПАЖА</div>
@@ -288,8 +291,7 @@ function startInterstitialAds() {
     const creditsShowing = document.getElementById('credits').classList.contains('show');
     const finalShowing   = !document.getElementById('finalModal').classList.contains('hidden');
     const overlayShowing = !document.getElementById('overlay').classList.contains('hidden');
-    const bigCrewShowing = document.getElementById('crewBigView').classList.contains('show');
-    if (rocketShowing || creditsShowing || finalShowing || overlayShowing || bigCrewShowing) return;
+    if (rocketShowing || creditsShowing || finalShowing || overlayShowing) return;
     await showInterstitialAd();
   }, 15 * 60 * 1000);
 }
@@ -360,7 +362,6 @@ const REGIONS = [
   {id:4,name:'Молодые ударные'},{id:5,name:'Вулканические купола'},{id:6,name:'Тектонические разломы'},{id:7,name:'Смешанный регион'}
 ];
 const REGION_COUNT = 8;
-// Активные имена экипажа (переводятся)
 let CREW_NAMES = ['Инженер Лоу','Вишневский','Пиркс-старший','Пиркс-младший','Оператор связи'];
 const CREW_SPOTS = [{region:0},{region:1},{region:3},{region:4},{region:7}];
 const O2_SPOTS = [{region:0},{region:2},{region:3},{region:5},{region:6}];
@@ -392,11 +393,8 @@ function applyLang(lang){
   document.getElementById('lblTimeStat').childNodes[0].textContent = t.timeStat + ' ';
   document.querySelectorAll('[data-ru][data-en]').forEach(el=>{ el.textContent = el.dataset[lang]; });
 
-  // Обновляем список имён экипажа — на английском тоже
   CREW_NAMES = t.crew.slice();
-  // Обновляем имена у уже созданных объектов на сцене
   crewItems.forEach((item, i) => { item.userData.name = CREW_NAMES[i]; });
-  // Обновляем открытое инфо-окно, если есть
   if (infoWindowItem) {
     document.getElementById('ciName').textContent = infoWindowItem.userData.name;
   }
@@ -523,10 +521,11 @@ function speak(text){
 }
 
 const WORLD_SIZE = 21166, WORLD_HALF = WORLD_SIZE / 2;
-const renderer = new THREE.WebGLRenderer({antialias: !isMobile, powerPreference:'high-performance'});
+const renderer = new THREE.WebGLRenderer({antialias: true, powerPreference:'high-performance'});
 renderer.setSize(innerWidth, innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.shadowMap.enabled = !isMobile;
+// Единый DPR для ПК и мобильного — 3, чтобы звёзды были одинаково крупными
+renderer.setPixelRatio(Math.min(devicePixelRatio, 3));
+renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
@@ -544,7 +543,7 @@ composer.addPass(bloomPass);
 composer.addPass(new OutputPass());
 
 /* ============================================================
-   РЕЛЬЕФ ЛУНЫ
+   РЕЛЬЕФ ЛУНЫ — без разницы между ПК и мобильным
    ============================================================ */
 const craters = [], domes = [], faults = [];
 const CRATER_DEPTH_MULT = 5.0;
@@ -560,13 +559,14 @@ function addDome(x, z, r, height) { domes.push({ x, z, r, height }); }
 function addFault(x, z, len, ang, h, w) { faults.push({ x, z, len, ang, h, w }); }
 
 {
-  for (let i = 0; i < (isMobile ? 3 : 8); i++) addCrater((Math.random()-0.5)*WORLD_SIZE, (Math.random()-0.5)*WORLD_SIZE, 1800 + Math.random() * 1800);
-  for (let i = 0; i < (isMobile ? 12 : 30); i++) addCrater((Math.random()-0.5)*WORLD_SIZE, (Math.random()-0.5)*WORLD_SIZE, 500 + Math.random() * 1200);
-  for (let i = 0; i < (isMobile ? 40 : 120); i++) addCrater((Math.random()-0.5)*WORLD_SIZE, (Math.random()-0.5)*WORLD_SIZE, 200 + Math.random() * 400);
-  for (let i = 0; i < (isMobile ? 250 : 800); i++) addCrater((Math.random()-0.5)*WORLD_SIZE, (Math.random()-0.5)*WORLD_SIZE, 60 + Math.random() * 160);
-  for (let i = 0; i < (isMobile ? 600 : 2200); i++) addCrater((Math.random()-0.5)*WORLD_SIZE, (Math.random()-0.5)*WORLD_SIZE, 15 + Math.random() * 55);
-  for (let i = 0; i < (isMobile ? 20 : 55); i++) addDome((Math.random()-0.5)*WORLD_SIZE, (Math.random()-0.5)*WORLD_SIZE, 150 + Math.random() * 350, 20 + Math.random() * 50);
-  for (let i = 0; i < (isMobile ? 5 : 15); i++) addFault((Math.random()-0.5)*WORLD_SIZE, (Math.random()-0.5)*WORLD_SIZE, 300 + Math.random() * 900, Math.random() * Math.PI, 10 + Math.random() * 30, 60 + Math.random() * 100);
+  // Одинаковое количество кратеров на всех устройствах
+  for (let i = 0; i < 8; i++) addCrater((Math.random()-0.5)*WORLD_SIZE, (Math.random()-0.5)*WORLD_SIZE, 1800 + Math.random() * 1800);
+  for (let i = 0; i < 30; i++) addCrater((Math.random()-0.5)*WORLD_SIZE, (Math.random()-0.5)*WORLD_SIZE, 500 + Math.random() * 1200);
+  for (let i = 0; i < 120; i++) addCrater((Math.random()-0.5)*WORLD_SIZE, (Math.random()-0.5)*WORLD_SIZE, 200 + Math.random() * 400);
+  for (let i = 0; i < 800; i++) addCrater((Math.random()-0.5)*WORLD_SIZE, (Math.random()-0.5)*WORLD_SIZE, 60 + Math.random() * 160);
+  for (let i = 0; i < 2200; i++) addCrater((Math.random()-0.5)*WORLD_SIZE, (Math.random()-0.5)*WORLD_SIZE, 15 + Math.random() * 55);
+  for (let i = 0; i < 55; i++) addDome((Math.random()-0.5)*WORLD_SIZE, (Math.random()-0.5)*WORLD_SIZE, 150 + Math.random() * 350, 20 + Math.random() * 50);
+  for (let i = 0; i < 15; i++) addFault((Math.random()-0.5)*WORLD_SIZE, (Math.random()-0.5)*WORLD_SIZE, 300 + Math.random() * 900, Math.random() * Math.PI, 10 + Math.random() * 30, 60 + Math.random() * 100);
 }
 
 const CELL_SIZE = 400;
@@ -628,10 +628,10 @@ function computeGroundH(x, z) {
 }
 
 /* ============================================================
-   ТЕРРЕЙН
+   ТЕРРЕЙН — единое разрешение
    ============================================================ */
 const TERRAIN_TILES = 3;
-const TERRAIN_RES = isMobile ? 220 : 360;
+const TERRAIN_RES = 360;
 const TOTAL_RES = TERRAIN_RES * TERRAIN_TILES;
 const TERRAIN_SIZE = WORLD_SIZE * TERRAIN_TILES;
 const vertsPerRow = TOTAL_RES + 1;
@@ -704,7 +704,7 @@ function sampleHeightMax(x, z, r) {
 }
 
 /* ============================================================
-   ЗВЁЗДЫ
+   ЗВЁЗДЫ — одинаково на ПК и мобильном
    ============================================================ */
 function createStarTex(s) {
   const c = document.createElement('canvas'); c.width = c.height = s;
@@ -720,7 +720,7 @@ function createStarTex(s) {
 }
 const starTex = createStarTex(64);
 const twinkleMaterials = [];
-const STAR_DPR = Math.min(devicePixelRatio, 2);
+const STAR_DPR = Math.min(devicePixelRatio, 3);
 function makeTwinkleStars(count, size, colorHex, baseFreq) {
   const geo = new THREE.BufferGeometry();
   const pos = [], col = [], phase = [], freq = [];
@@ -813,7 +813,7 @@ earthGroup.rotation.x = THREE.MathUtils.degToRad(-22);
 earthGroup.position.copy(EARTH_OFFSET);
 earthGroup.updateMatrix();
 const earthMat = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:1.0, metalness:0.0, emissive:0xffffff, emissiveIntensity:1.2, transparent:false, opacity:1.0, side: THREE.FrontSide, depthWrite:true, depthTest:true });
-const earth = new THREE.Mesh(new THREE.SphereGeometry(18000, isMobile?64:128, isMobile?48:96), earthMat);
+const earth = new THREE.Mesh(new THREE.SphereGeometry(18000, 128, 96), earthMat);
 earth.rotation.y = THREE.MathUtils.degToRad(-30);
 earth.rotation.x = THREE.MathUtils.degToRad(-15);
 earthGroup.add(earth);
@@ -821,7 +821,7 @@ const earthTexLoader = new THREE.TextureLoader();
 earthTexLoader.setCrossOrigin('anonymous');
 earthTexLoader.load('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg',
   (tex) => {
-    tex.anisotropy = isMobile ? 4 : 16;
+    tex.anisotropy = 16;
     tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.ClampToEdgeWrapping;
     earthMat.map = tex; earthMat.emissiveMap = tex;
     earthMat.emissiveIntensity = 0.9; earthMat.needsUpdate = true;
@@ -843,15 +843,13 @@ const sunGlowTex = (() => {
 const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({map:sunGlowTex, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false}));
 sunGlow.scale.set(5000, 5000, 1);
 scene.add(sunGlow);
-const sunLight = new THREE.DirectionalLight(0xfff8e8, isMobile ? 4.5 : 5.5);
-sunLight.castShadow = !isMobile;
-if (sunLight.shadow) {
-  sunLight.shadow.mapSize.set(2048, 2048);
-  sunLight.shadow.camera.near = 1; sunLight.shadow.camera.far = 15000;
-  sunLight.shadow.camera.left = -600; sunLight.shadow.camera.right = 600;
-  sunLight.shadow.camera.top = 600; sunLight.shadow.camera.bottom = -600;
-  sunLight.shadow.bias = -0.0004; sunLight.shadow.normalBias = 0.6;
-}
+const sunLight = new THREE.DirectionalLight(0xfff8e8, 5.5);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.set(2048, 2048);
+sunLight.shadow.camera.near = 1; sunLight.shadow.camera.far = 15000;
+sunLight.shadow.camera.left = -600; sunLight.shadow.camera.right = 600;
+sunLight.shadow.camera.top = 600; sunLight.shadow.camera.bottom = -600;
+sunLight.shadow.bias = -0.0004; sunLight.shadow.normalBias = 0.6;
 scene.add(sunLight); scene.add(sunLight.target);
 const nightLight = new THREE.DirectionalLight(0x334466, 0.15);
 scene.add(nightLight);
@@ -1160,7 +1158,7 @@ for (const s of [-1,1]) { const b = buildCore(false); b.position.x = s*3.7; rock
 scene.add(rocket);
 
 /* ============================================================
-   ДВЕ БАШНИ РЯДОМ С РАКЕТОЙ
+   ДВЕ БАШНИ
    ============================================================ */
 function buildTruss(w,h,d,bays,br,mat) {
   const segs = [], hw = w/2, hd = d/2, bh = h/bays;
@@ -1428,12 +1426,10 @@ function showCrewInfoWindow(item) {
   if (infoWindowClosed.has(id)) return;
   document.getElementById('ciName').textContent = item.userData.name;
   document.getElementById('crewInfoWindow').classList.add('show');
-  document.getElementById('crewBigView').classList.add('show');
   infoWindowItem = item;
 }
 function hideCrewInfoWindow() {
   document.getElementById('crewInfoWindow').classList.remove('show');
-  document.getElementById('crewBigView').classList.remove('show');
   if (infoWindowItem) infoWindowClosed.add(infoWindowItem.userData.id);
   infoWindowItem = null;
 }
@@ -1487,7 +1483,7 @@ document.getElementById('panelClose').addEventListener('click', () => togglePane
 const minimapCanvas = document.getElementById('minimapCanvas');
 const mmCtx = minimapCanvas.getContext('2d');
 let mmSize = 280;
-const mmDpr = Math.min(devicePixelRatio, 2);
+const mmDpr = Math.min(devicePixelRatio, 3);
 const MINIMAP_RANGE = 4000;
 function resizeMinimap() {
   const rect = minimapCanvas.getBoundingClientRect();
@@ -1573,69 +1569,6 @@ function showToast(prefix, text) {
   logTimeout = setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.classList.add('hidden'), 500); }, 5000);
 }
 
-const crewBigCanvas = document.getElementById('crewBigCanvas');
-const crewBigRenderer = new THREE.WebGLRenderer({canvas:crewBigCanvas, antialias:true, alpha:true});
-crewBigRenderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-crewBigRenderer.toneMapping = THREE.ACESFilmicToneMapping;
-crewBigRenderer.toneMappingExposure = 1.1;
-crewBigRenderer.outputColorSpace = THREE.SRGBColorSpace;
-crewBigRenderer.shadowMap.enabled = true;
-crewBigRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
-const crewBigScene = new THREE.Scene();
-const crewBigCam = new THREE.PerspectiveCamera(50, 1, 0.05, 100);
-const crewBigGroup = new THREE.Group();
-crewBigScene.add(crewBigGroup);
-const crewBigAstro = createAstronaut();
-crewBigAstro.scale.set(1.0, 1.0, 1.0);
-crewBigGroup.add(crewBigAstro);
-function fitCrewBigCamera() {
-  const h = 1.9;
-  const fov = crewBigCam.fov * Math.PI / 180;
-  const dist = (h / 2) / Math.tan(fov / 2) * 1.6;
-  crewBigCam.position.set(dist * 0.55, 1.0, dist * 0.85);
-  crewBigCam.lookAt(0, 0.95, 0);
-}
-fitCrewBigCamera();
-const crewBigControls = new OrbitControls(crewBigCam, crewBigCanvas);
-crewBigControls.target.set(0, 0.95, 0);
-crewBigControls.enableDamping = true;
-crewBigControls.dampingFactor = 0.06;
-crewBigControls.minDistance = 0.5;
-crewBigControls.maxDistance = 12;
-crewBigControls.maxPolarAngle = Math.PI * 0.495;
-crewBigControls.autoRotate = true;
-crewBigControls.autoRotateSpeed = 0.6;
-crewBigControls.enabled = false;
-{
-  const k = new THREE.DirectionalLight(0xfff2e2, 2.5);
-  k.position.set(3.0, 4.4, 2.6); k.castShadow = true;
-  k.shadow.mapSize.set(2048,2048);
-  k.shadow.camera.near = .5; k.shadow.camera.far = 20;
-  k.shadow.camera.left = -4; k.shadow.camera.right = 4;
-  k.shadow.camera.top = 4; k.shadow.camera.bottom = -2;
-  k.shadow.bias = -.0006; k.shadow.normalBias = .022; k.shadow.radius = 3;
-  k.target.position.set(0, 1.3, 0);
-  crewBigScene.add(k, k.target);
-  const f = new THREE.DirectionalLight(0xd6e6ff, .55); f.position.set(-3.6,2.2,-1.4); crewBigScene.add(f);
-  const r = new THREE.DirectionalLight(0xffffff, 1.15); r.position.set(-1.6,3.0,-3.8); crewBigScene.add(r);
-  const b = new THREE.DirectionalLight(0xfff0dd, .28); b.position.set(0,-1.6,1.6); crewBigScene.add(b);
-  const h = new THREE.HemisphereLight(0xdfe9f5,0x8a8378,.35); crewBigScene.add(h);
-}
-function resizeCrewBig() {
-  const r = crewBigCanvas.getBoundingClientRect();
-  const w = r.width || innerWidth, h = r.height || innerHeight;
-  crewBigRenderer.setSize(w, h, false);
-  crewBigCam.aspect = w / h;
-  crewBigCam.updateProjectionMatrix();
-}
-function renderCrewBig() {
-  if (!document.getElementById('crewBigView').classList.contains('show')) return;
-  resizeCrewBig();
-  crewBigControls.update();
-  crewBigRenderer.render(crewBigScene, crewBigCam);
-  requestAnimationFrame(renderCrewBig);
-}
-
 function checkCollection(cx, cz) {
   let anyCrewClose = false;
   for (const item of crewItems) {
@@ -1646,7 +1579,6 @@ function checkCollection(cx, cz) {
     if (d2 < 900 && d2 > 9) {
       if (!infoWindowItem && !infoWindowClosed.has(item.userData.id)) {
         showCrewInfoWindow(item);
-        requestAnimationFrame(renderCrewBig);
       }
       anyCrewClose = true;
     }
@@ -1736,11 +1668,11 @@ function triggerFailure(reason) {
 window.restartGame = () => showRewardedAd().then(() => location.reload());
 
 /* ============================================================
-   ФИНАЛЬНАЯ СЦЕНА — OrbitControls сразу активны
+   ФИНАЛЬНАЯ СЦЕНА
    ============================================================ */
 const rcCanvas = document.getElementById('rcCanvas');
 const rcRenderer = new THREE.WebGLRenderer({canvas:rcCanvas, antialias:true, powerPreference:'high-performance'});
-rcRenderer.setPixelRatio(Math.min(devicePixelRatio,2));
+rcRenderer.setPixelRatio(Math.min(devicePixelRatio, 3));
 rcRenderer.shadowMap.enabled = true;
 rcRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
 rcRenderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -1936,8 +1868,6 @@ function rcLoop(now){
     if(rcMt>=rcT_END){ rcState='done'; }
   }
   if(rcState==='done'){ const bothLanded = rcLand[0] && rcLand[1]; if (bothLanded && !creditsStarted) { creditsStarted = true; const r = document.getElementById('radio'); if (r) { r.pause(); r.currentTime = 0; } document.getElementById('credits').classList.add('show'); showCredits(); } }
-  // Автоподстройка камеры во время полёта — только если пользователь сам не начал
-  // управлять камерой (первые 8 секунд). Потом камера полностью под контролем игрока.
   if (rcState==='flight' && performance.now() - rcUserZoom > 8000) {
     const ty = rcKfWrap(rcCamKeys.map(k=>[k[0],k[1]]), Math.min(rcMt, rcT_END));
     const td = rcKfWrap(rcCamKeys.map(k=>[k[0],k[2]]), Math.min(rcMt, rcT_END));
@@ -1957,7 +1887,6 @@ rcResize(); rcReset(); requestAnimationFrame(rcLoop); addEventListener('resize',
 
 function openRocketScene(){
   document.getElementById('rocketCam').classList.add('show');
-  // Снимаем pointer-lock, чтобы мышь была свободна для OrbitControls
   if (document.pointerLockElement) document.exitPointerLock();
   rcResize();
 }
@@ -2013,7 +1942,7 @@ function animate() {
   sun.visible = isDay && sunHeight > 0.05;
   sunGlow.visible = sun.visible;
   sunGlow.material.opacity = Math.max(0, dayFactor);
-  sunLight.intensity = (isMobile ? 4.5 : 5.5) * Math.pow(Math.max(0.05, dayFactor), 0.6);
+  sunLight.intensity = 5.5 * Math.pow(Math.max(0.05, dayFactor), 0.6);
   if (!isDay) sun.visible = false;
 
   const speed = (keys['ShiftLeft'] ? BASE_SPEED*2 : BASE_SPEED) * (flightMode ? FLIGHT_MULTIPLIER : 1);
@@ -2127,7 +2056,6 @@ addEventListener('resize', () => {
   composer.setSize(innerWidth, innerHeight);
   if (bloomPass) bloomPass.setSize(innerWidth, innerHeight);
   resizeMinimap();
-  resizeCrewBig();
 });
 document.body.addEventListener('touchmove', e => { if (e.target === document.body) e.preventDefault(); }, {passive:false});
 document.getElementById('musicBtn2').addEventListener('click', () => { const r = document.getElementById('radio'); if (r.paused) r.play().catch(()=>{}); else r.pause(); });
